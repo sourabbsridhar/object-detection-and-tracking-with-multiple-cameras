@@ -116,6 +116,8 @@ def main():
     print(mm.io.render_summary(summary, formatters=mh.formatters, namemap=mm.io.motchallenge_metric_names))
     logging.info('Completed')
 
+    if 
+
 
 if __name__ == '__main__':
     main()

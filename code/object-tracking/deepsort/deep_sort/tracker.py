@@ -65,18 +65,20 @@ class Tracker:
 
         """
         # Run matching cascade.
-        matches, unmatched_tracks, unmatched_detections = \
-            self._match(detections)
+        matches, unmatched_tracks, unmatched_detections = self._match(detections)
 
         # Update track set.
         for track_idx, detection_idx in matches:
-            self.tracks[track_idx].update(
-                self.kf, detections[detection_idx])
+            self.tracks[track_idx].update(self.kf, detections[detection_idx])
+
         for track_idx in unmatched_tracks:
             self.tracks[track_idx].mark_missed()
+
         for detection_idx in unmatched_detections:
             self._initiate_track(detections[detection_idx])
+
         self.tracks = [t for t in self.tracks if not t.is_deleted()]
+
 
         # Update distance metric.
         active_targets = [t.track_id for t in self.tracks if t.is_confirmed()]

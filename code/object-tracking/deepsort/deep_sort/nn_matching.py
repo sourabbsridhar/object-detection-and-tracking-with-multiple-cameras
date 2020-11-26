@@ -77,7 +77,7 @@ def _nn_euclidean_distance(x, y):
 
 def _nn_cosine_distance(x, y):
     """ Helper function for nearest neighbor distance metric (cosine).
-
+    
     Parameters
     ----------
     x : ndarray
