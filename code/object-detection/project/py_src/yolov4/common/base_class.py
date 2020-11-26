@@ -30,6 +30,8 @@ import numpy as np
 
 from . import media, predict
 
+import pandas as pd
+
 
 class BaseClass:
     def __init__(self, tiny: bool = False, tpu: bool = False):
@@ -227,11 +229,38 @@ class BaseClass:
         # pylint: disable=unused-argument, no-self-use
         return [[0.0, 0.0, 0.0, 0.0, -1]]
 
-    # def modifyBB(box):
-    #     for arr in box:
-    #         x = arr[0]
-    #         y = arr[1]
-    #
+    '''Custom functions'''
+
+    def modifyBB(self,bboxes,scaleX,scaleY,frameID,arr):
+        for i in range(len(bboxes)):
+            temp_bboxes = bboxes[i]
+            objID = temp_bboxes[4]
+            # print(objID)
+            # print(type(objID))
+            # print(type(1.0))
+            if objID == np.float64(28.0):
+                objID = np.float64(1.0)
+
+            if (objID == np.float64(0.0)) or (objID == np.float64(1.0)):
+                pos1 = temp_bboxes[0] * scaleX
+                pos2 = temp_bboxes[1] * scaleY
+                pos3 = temp_bboxes[2] * scaleX
+                pos4 = temp_bboxes[3] * scaleY
+                probabilty = temp_bboxes[5]
+
+                temp_obj = np.array([frameID, pos1, pos2, pos3, pos4, objID, probabilty])
+                arr.append(temp_obj)
+
+        # print(arr)
+        a_file = open("detect.txt", "w")
+        for row in arr:
+            np.savetxt(a_file, [row],newline = '\n')
+        a_file.close()
+        # pd.DataFrame(arr).to_csv("detect.csv")
+        # with open('detect.txt','wb') as abc:
+        #     np.savetxt(abc, arr, delimiter=",")
+        return None
+
 
 
     def inference(
@@ -244,6 +273,7 @@ class BaseClass:
         cv_waitKey_delay: int = 1,
         iou_threshold: float = 0.3,
         score_threshold: float = 0.25,
+        arr = []
     ):
         if not path.exists(media_path):
             raise FileNotFoundError("{} does not exist".format(media_path))
@@ -304,21 +334,24 @@ class BaseClass:
                     image = self.draw_bboxes(frame, bboxes)
                     curr_time = time.time()
                     ''' MODIFICATION '''
-                    print(bboxes[0][0])
-                    # mod_bboxes =
-                    # data = np.append(cap.get(cv2.CAP_PROP_POS_FRAMES), bboxes, )
-                    # a_file = open("detect.txt","w")
-                    # for row in bboxes:
-                    #     np.savetxt(a_file, row)
-                    # np.savetxt(a_file,data)
-                    # a_file.close()
+                    # print(bboxes.shape)
+                    # print(bboxes)
+                    # print(type(bboxes))
+                    frame_height, frame_width = frame.shape[:2]
+                    frameID = cap.get(cv2.CAP_PROP_POS_FRAMES)
+                    # print(frame_height)
+                    # print(frame_width)
+                    # print(cap.get(cv2.CAP_PROP_POS_FRAMES))
+                    self.modifyBB(bboxes, frame_width, frame_height, frameID, arr)
+
                     ''' END MODIFICATION'''
+
                     cv2.putText(
                         image,
                         "prediction time: {:.2f} ms, fps: {:.2f}, frame_id: {:.2f}".format(
                             predict_exec_time * 1000,
                             1 / (curr_time - prev_time),
-                            cap.get(cv2.CAP_PROP_POS_FRAMES)
+                            frameID
                         ),
                         org=(5, 20),
                         fontFace=cv2.FONT_HERSHEY_SIMPLEX,
