@@ -12,15 +12,15 @@ numpy
 *To be added*
 
 ## Authors
-Alvin Combrink
-Apichai Sompolpong
-Divya Kara
-Jonatan Nordh
-Klas Svensson Qvistberg
-Neel Kachhawah
-Sara Roth
-Sourab Bapu Sridhar
-Tilani Gallege
+* Alvin Combrink
+* Apichai Sompolpong
+* Divya Kara
+* Jonatan Nordh
+* Klas Svensson Qvistberg
+* Neel Kachhawah
+* Sara Roth
+* Sourab Bapu Sridhar
+* Tilani Gallege
 
 ## License
-This project is released under the terms of (MIT Licesnse)[LICENSE].
+This project is released under the terms of [MIT License](LICENSE).
