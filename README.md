@@ -4,6 +4,7 @@ Repository for the project "Object detection and tracking with multiple cameras"
 
 ## Dependecies
 To install all the dependencies, please run the following command below:
+
 `pip install -r requirements.txt`
 
 ## Installation Guide
@@ -22,6 +23,10 @@ To install all the dependencies, please run the following command below:
 * Sara Roth
 * Sourab Bapu Sridhar
 * Tilani Gallege
+
+
+## References
+*To be added*
 
 ## License
 This project is released under the terms of [MIT License](LICENSE).
