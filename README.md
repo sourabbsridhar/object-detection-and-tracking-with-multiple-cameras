@@ -3,7 +3,8 @@
 Repository for the project "Object detection and tracking with multiple cameras" from the course SSY226 Design Project in System, Controls, and Mechatronics from the Chalmers University of Technology.
 
 ## Dependecies
-numpy
+To install all the dependencies, please run the following command below:
+`pip install -r requirements.txt`
 
 ## Installation Guide
 *To be added*
