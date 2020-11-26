@@ -1,4 +1,5 @@
 # vim: expandtab:ts=4:sw=4
+# python show_results.py --sequence_dir /home/jonatan/SSY226/object-detection-and-tracking-with-multiple-cameras/dataset/MOT16/train/MOT16-04/ --result_file results/train/MOT16-04.txt --output_file MOT16-04-vid --show_false_alarms True
 import argparse
 
 import cv2
