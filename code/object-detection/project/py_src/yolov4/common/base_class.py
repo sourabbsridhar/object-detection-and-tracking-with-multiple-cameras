@@ -235,30 +235,36 @@ class BaseClass:
         for i in range(len(bboxes)):
             temp_bboxes = bboxes[i]
             objClass = temp_bboxes[4]
+            probabilty = temp_bboxes[5]
             # print(objID)
             # print(type(objID))
             # print(type(1.0))
             if objClass == np.float64(28.0):
                 objClass = np.float64(1.0)
 
-            if (objClass == np.float64(0.0)) or (objClass == np.float64(1.0)):
+            if (probabilty == np.float64(0.0)): # when detect nothing
+                arr.append(np.array([frameID,-1,0,0.0,0.0,0.0,0.0,-1,-1]))
+
+            elif (objClass == np.float64(0.0)) or (objClass == np.float64(1.0)):
                 centerX = temp_bboxes[0] * scaleX
                 centerY = temp_bboxes[1] * scaleY
                 width = temp_bboxes[2] * scaleX
                 height = temp_bboxes[3] * scaleY
-                top = centerY - height/2.0
-                left = centerX - width/2.0
-                probabilty = temp_bboxes[5]
+                top = centerY - height/2.0 # Y coordinate of top-left corner
+                left = centerX - width/2.0 # X coordinate of top-left corner
                 objID = -1 # Detection only
                 visibility = -1 # No information of ground truth
                 temp_obj = np.array([frameID,objID, left, top, width, height, probabilty, objClass, visibility])
                 arr.append(temp_obj)
 
+            else:
+                arr.append(np.array([frameID, -1, 0, 0.0, 0.0, 0.0, 0.0, -1, -1]))
+
         # print(arr)
         a_file = open("detect.txt", "w")
         format = '%d','%d', '%1.3f', '%1.3f', '%1.3f', '%1.3f', '%1.3f' ,'%d', '%d'
         for row in arr:
-            np.savetxt(a_file, [row],newline = '\n', delimiter=',', fmt = format)
+            np.savetxt(a_file, [row],newline = '\n', delimiter=',', fmt = format) # only save row if height and width are valid
         a_file.close()
         # pd.DataFrame(arr).to_csv("detect.csv")
         # with open('detect.txt','wb') as abc:
@@ -343,13 +349,13 @@ class BaseClass:
                     curr_time = time.time()
                     ''' MODIFICATION '''
                     # print(bboxes.shape)
-                    # print(bboxes)
+                    print(bboxes)
                     # print(type(bboxes))
                     frame_height, frame_width = frame.shape[:2]
                     frameID = cap.get(cv2.CAP_PROP_POS_FRAMES)
                     # print(frame_height)
                     # print(frame_width)
-                    # print(cap.get(cv2.CAP_PROP_POS_FRAMES))
+                    print('frame: ', str(frameID))
                     self.modifyBB(bboxes, frame_width, frame_height, frameID, arr)
 
                     ''' END MODIFICATION'''
