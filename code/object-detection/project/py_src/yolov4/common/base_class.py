@@ -234,27 +234,31 @@ class BaseClass:
     def modifyBB(self,bboxes,scaleX,scaleY,frameID,arr):
         for i in range(len(bboxes)):
             temp_bboxes = bboxes[i]
-            objID = temp_bboxes[4]
+            objClass = temp_bboxes[4]
             # print(objID)
             # print(type(objID))
             # print(type(1.0))
-            if objID == np.float64(28.0):
-                objID = np.float64(1.0)
+            if objClass == np.float64(28.0):
+                objClass = np.float64(1.0)
 
-            if (objID == np.float64(0.0)) or (objID == np.float64(1.0)):
-                pos1 = temp_bboxes[0] * scaleX
-                pos2 = temp_bboxes[1] * scaleY
-                pos3 = temp_bboxes[2] * scaleX
-                pos4 = temp_bboxes[3] * scaleY
+            if (objClass == np.float64(0.0)) or (objClass == np.float64(1.0)):
+                centerX = temp_bboxes[0] * scaleX
+                centerY = temp_bboxes[1] * scaleY
+                width = temp_bboxes[2] * scaleX
+                height = temp_bboxes[3] * scaleY
+                top = centerY - height/2.0
+                left = centerX - width/2.0
                 probabilty = temp_bboxes[5]
-
-                temp_obj = np.array([frameID, pos1, pos2, pos3, pos4, objID, probabilty])
+                objID = -1 # Detection only
+                visibility = -1 # No information of ground truth
+                temp_obj = np.array([frameID,objID, left, top, width, height, probabilty, objClass, visibility])
                 arr.append(temp_obj)
 
         # print(arr)
         a_file = open("detect.txt", "w")
+        format = '%d','%d', '%1.3f', '%1.3f', '%1.3f', '%1.3f', '%1.3f' ,'%d', '%d'
         for row in arr:
-            np.savetxt(a_file, [row],newline = '\n')
+            np.savetxt(a_file, [row],newline = '\n', delimiter=',', fmt = format)
         a_file.close()
         # pd.DataFrame(arr).to_csv("detect.csv")
         # with open('detect.txt','wb') as abc:
@@ -296,6 +300,10 @@ class BaseClass:
             frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             image = self.draw_bboxes(frame, bboxes)
             cv2.imshow("result", image)
+            frame_height, frame_width = frame.shape[:2]
+            frameID = 0
+            self.modifyBB(bboxes, frame_width, frame_height, frameID, arr)
+            cv2.imwrite('prediction.png',image)
         else:
             if cv_apiPreference is None:
                 cap = cv2.VideoCapture(media_path)

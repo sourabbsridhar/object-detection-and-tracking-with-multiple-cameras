@@ -30,5 +30,7 @@ yolo.make_model()
 yolo.load_weights("weights/yolov4.weights", weights_type = "yolo")
 
 '''Infer image/video with IOU threshold = 0.5'''
-yolo.inference(media_path="data/sample_vid_3_Trim.mp4", is_image=False,iou_threshold=0.5)
-# yolo.inferqence(media_path=dataPath, is_image=False,iou_threshold=0.5)
+# yolo.inference(media_path="data/sample_vid_3_Trim.mp4", is_image=False,iou_threshold=0.5)
+yolo.inference(media_path="data/sample_vid_3.mkv", is_image=False,iou_threshold=0.5)
+# yolo.inference(media_path=dataPath, is_image=False,iou_threshold=0.5)
+# yolo.inference(media_path=dataPathResized, is_image=True, iou_threshold=0.5)
