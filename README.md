@@ -1,6 +1,6 @@
 # Object detection and tracking with multiple cameras
 
-Repository for the project "Object detection and tracking with multiple cameras" from the course SSY226 Design Project in System, Controls, and Mechatronics from the Chalmers University of Technology.
+This repository is for the project "Object detection and tracking with multiple cameras" from the course Design Project in System, Controls, and Mechatronics (SSY226) at the Chalmers University of Technology.
 
 ## Dependecies
 To install all the dependencies, please run the following command below:
