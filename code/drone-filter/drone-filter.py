@@ -5,19 +5,30 @@ import glob
 import csv
 from random import random
 
-output = []
-lines = []
+
+'''
+    1   Track ID. All rows with the same ID belong to the same path.
+    2   xmin. The top left x-coordinate of the bounding box.
+    3   ymin. The top left y-coordinate of the bounding box.
+    4   xmax. The bottom right x-coordinate of the bounding box.
+    5   ymax. The bottom right y-coordinate of the bounding box.
+    6   frame. The frame that this annotation represents.
+    7   lost. If 1, the annotation is outside of the view screen.
+    8   occluded. If 1, the annotation is occluded.
+    9   generated. If 1, the annotation was automatically interpolated.
+    10  label. The label for this annotation, enclosed in quotation marks.
+'''
 
 #PATH = "/Users/divyakara/Documents/Chalmers/Master/Year2/SSY226- Design_Project/GitLab/object-detection-and-tracking-with-multiple-cameras/code/drone-filter/annotations/"
 # Path for input data
-PATH = "./code/drone-filter/annotations/"
+PATH = "/home/jonatan/SSY226/object-detection-and-tracking-with-multiple-cameras/code/drone-filter/annotations/"
 
 # Folder for output data
-PATH_out = "code/drone-filter/generated-detections"
+PATH_out = "/home/jonatan/SSY226/object-detection-and-tracking-with-multiple-cameras/code/drone-filter/generated-detections/"
 
 # All paths in input folder
 PATH_in_all = glob.glob(PATH+'*/*/*.txt')
-
+print(PATH_in_all)
 # Empty list to fill with all output paths
 PATH_out_all = []
 
@@ -28,6 +39,7 @@ for path in PATH_in_all:
 
         # Read lines in file
         f.readline() 
+        output = []
 
         # Loop over all lines in input text file
         for index,line in enumerate(f):
@@ -38,14 +50,19 @@ for path in PATH_in_all:
             PERCENTAGE_NOISE = 0.05
             if random() < PERCENTAGE_NOISE:
                 continue
+            
+            # Skip if no bounding box
+            #if int(lines[2]) == 0:
+            #    continue
 
             # Check if line/object is not occluded
-            if int(lines[7]) != 1:
-                # if line not occluded add to output list, occluded objects are removed
-                output.append(lines)
+            if int(lines[7]) == 1:
+                # if line occluded skip the row, ocluded detections are ignored
+                continue
 
-            # set ID to -1 
-            lines[1] = -1
+            
+            # Define all annotation parameters
+            ID, xmin, ymin, xmax, ymax, frame, lost, ocluded, generated, label = lines
             
             # Dictonary class
             name_dict = {}
@@ -57,16 +74,15 @@ for path in PATH_in_all:
             name_dict["Bus"]  = 5
 
             # Put all unique objects in a list
-            obj = str(lines[-1])
+            obj = str(label)
             obj = obj.split('"')[1] # Remove "" and \n 
-            #print("Object", obj)
 
-            # Move to pos -2
-            lines[-2] = name_dict[obj]
-
-            # Visibility = 1 new pos
-            lines[-1] = 1
+            # Change the output to correct format and give labels a number
+            output.append([frame, -1, xmin, ymin, xmax, ymax, 1, name_dict[obj], 1, -1])
         
+        # Sort the list with respect to the frames
+        output.sort(key=lambda x : x[0])
+
         # Add subfolders to output folder, same structure as input folder
         PATH_out = str.replace(path, 'annotations','generated_detections')
 
@@ -79,7 +95,6 @@ for path in PATH_in_all:
             for line in output:
                 # Write comma seperated file
                 fs.write(','.join(str(i) for i in line))
-                # New line after each object
                 fs.write('\n')
 
     print('#### ONE PATH DONE! ###', PATH_out)
