@@ -1,8 +1,11 @@
+# Imports for clustering
 import numpy as np
+from copy import deepcopy
+
+# Imports for testing and plotting, not necessary for clustering
 import random
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
-from copy import deepcopy
+
 
 
 class Projection:
