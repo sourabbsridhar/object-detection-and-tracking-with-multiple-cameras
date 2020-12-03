@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 from copy import deepcopy
 
 
@@ -32,37 +33,43 @@ class Cluster:
     def __init__(self, index):
         self.projections = list()
         self.index = index
+        self.position_average = None
+        self.velocity_average = None
 
     def __eq__(self, other):
         if type(other) != Cluster:
             return False
-        elif self.index == other.index:
+        elif self.index != other.index:
             return False
         return True
 
     def add_projection(self, projection):
         self.projections.append(projection)
+        self.update_averages()
 
     def validate_cluster(self, R, V):
-
+        # Make sure projection isn't farther than R/2 and V/2 away from the average and that no
         for projection in self.projections:
-            # Make sure projection isn't farther than R/2 and V/2 away from the average and that no
             if np.linalg.norm(projection.get_position() - self.get_position()) > R/2 or \
                     np.linalg.norm(projection.get_velocity() - self.get_velocity()) > V/2:
                 return False
 
-            # Make sure no there are no projections from the same camera
-            for another_projection in self.projections:
-                if another_projection != projection and another_projection.camera_index == projection.camera_index:
-                    return False
+        # Make sure no there are no projections from the same camera
+        camera_list = [projection.camera_index for projection in self.projections]
+        if len(camera_list) > len(set(camera_list)):
+            return False
 
         return True
 
+    def update_averages(self):
+        self.position_average = np.mean([projection.position for projection in self.projections])
+        self.velocity_average = np.mean([projection.velocity for projection in self.projections])
+
     def get_position(self):
-        return np.mean([projection.position for projection in self.projections]) if len(projections) > 0 else None
+        return self.position_average
 
     def get_velocity(self):
-        return np.mean([projection.velocity for projection in self.projections]) if len(projections) > 0 else None
+        return self.velocity_average
 
 
 def objective_function(projection1, projection2, R, V):
@@ -77,89 +84,113 @@ def fusion(projections, R, V):
     clusters = []
     clustered_projections = []
 
-    change = True
-    while change:
-        change = False
+    changes_made = True
+    strict_conditions = True
+    while changes_made:
+        changes_made = False
 
         sigma_list = [elem for elem in clusters + projections if elem not in clustered_projections]
 
         for theta in sigma_list:
+
+            # Pre-computation for condition 4 (only for computational efficiency)
+            if strict_conditions:
+                argmin_theta = np.argmin([objective_function(theta, gamma, R, V)
+                                          if theta != gamma else np.inf for gamma in sigma_list])
+
             for sigma in sigma_list:
 
                 # Make sure theta and sigma are not the same element
                 if theta == sigma:
                     continue
 
-                # Condition 1: Make sure that theta and sigma aren't projections from the same camera
+                # Condition 1-2: Make sure that theta and sigma aren't or don't contain projections from the same camera
                 if type(theta) == Projection and type(sigma) == Projection:
                     if theta.camera_index == sigma.camera_index:
                         continue
+                elif type(theta) == Projection or type(sigma) == Projection:
+                    a_cluster = theta if type(theta) == Cluster else sigma
+                    a_projection = theta if type(theta) == Projection else sigma
+                    test_cluster = deepcopy(a_cluster)
+                    test_cluster.add_projection(a_projection)
+                    if not test_cluster.validate_cluster(R, V):
+                        continue
+                else:
+                    test_cluster = Cluster(len(clusters))
+                    test_cluster.projections = theta.projections + sigma.projections
+                    test_cluster.update_averages()
+                    if not test_cluster.validate_cluster(R, V):
+                        continue
 
-                # Condition 2: Make sure that theta and sigma are within R and V from each other
+                # Condition 3: Make sure that theta and sigma are within R and V from each other
                 if np.linalg.norm(theta.get_position() - sigma.get_position()) > R \
                         or np.linalg.norm(theta.get_velocity() - sigma.get_velocity()) > V:
                     continue
 
-
                 # Condition 3: Make sure that theta is the minimizer of the objective function for sigma
-                argmin_sigma = np.argmin([objective_function(sigma, gamma, R, V)
-                                          if sigma != gamma else np.inf for gamma in sigma_list])
-                if theta != sigma_list[argmin_sigma]:
-                    continue
+                if strict_conditions:
+                    argmin_sigma = np.argmin([objective_function(sigma, gamma, R, V)
+                                              if sigma != gamma else np.inf for gamma in sigma_list])
+                    if theta != sigma_list[argmin_sigma]:
+                        continue
 
                 # Condition 4: Make sure that sigma is the minimizer of the objective function for theta
-                argmin_theta = np.argmin([objective_function(theta, gamma, R, V)
-                                          if theta != gamma else np.inf for gamma in sigma_list])
-                if sigma != sigma_list[argmin_theta]:
-                    continue
+                if strict_conditions:
+                    # argmin_theta was computed outside of sigma-loop
+                    if sigma != sigma_list[argmin_theta]:
+                        continue
 
                 # All conditions are met
 
                 # If both theta and sigma are projections
                 if type(theta) == Projection and type(sigma) == Projection:
                     # Add new cluster
-                    newCluster = Cluster(len(clusters))
-                    newCluster.add_projection(theta)
-                    newCluster.add_projection(sigma)
-                    clusters.append(newCluster)
+                    new_cluster = Cluster(len(clusters))
+                    new_cluster.add_projection(theta)
+                    new_cluster.add_projection(sigma)
+                    clusters.append(new_cluster)
 
                     # Add theta and sigma to clustered projection set so that they are not evaluated anymore
                     clustered_projections.append(theta)
                     clustered_projections.append(sigma)
-                    change = True
+                    changes_made = True
                     break
 
                 # If one of theta or sigma is a projection and the other a cluster
                 elif type(theta) == Projection or type(sigma) == Projection:
-                    aCluster = theta if type(theta) == Cluster else sigma
-                    aProjection = theta if type(theta) == Projection else sigma
-
-                    testCluster = deepcopy(aCluster)
-                    testCluster.add_projection(aProjection)
-
-                    if testCluster.validate_cluster(R,V) == True:
-                        aCluster.add_projection(aProjection)
-                        clustered_projections.append(aProjection)
-                        change = True
-                        break
+                    if type(theta) == Cluster:
+                        theta.add_projection(sigma)
+                        clustered_projections.append(sigma)
+                    else:
+                        sigma.add_projection(theta)
+                        clustered_projections.append(theta)
+                    changes_made = True
+                    break
 
                 # If both theta and sigma are clusters
                 else:
-                    testCluster = Cluster(len(clusters))
-                    testCluster.projections = theta.projections + sigma.projections
-                    if testCluster.validate_cluster(R, V) == True:
-                        # Remove theta and sigma from clusters
-                        clusters = [cluster for cluster in clusters if cluster != theta and cluster != sigma]
-                        # Add new cluster
-                        clusters.append(testCluster)
-                        # Re-index clusters
-                        for i,cluster in enumerate(clusters): cluster.index = i+1
+                    new_cluster = Cluster(len(clusters))
+                    new_cluster.projections = theta.projections + sigma.projections
+                    new_cluster.update_averages()
 
-                        change = True
-                        break
+                    # Remove theta and sigma from clusters
+                    clusters = [cluster for cluster in clusters if cluster != theta and cluster != sigma]
+                    # Add new cluster
+                    clusters.append(new_cluster)
+                    # Re-index clusters
+                    for i, cluster in enumerate(clusters): cluster.index = i
 
-            if change == True:
+                    changes_made = True
+                    break
+
+            if changes_made:
                 break
+
+        if changes_made:
+            strict_conditions = True
+        elif strict_conditions:
+            changes_made = True
+            strict_conditions = False
 
     # Add all projections that did not get clustered into individual clusters
     for projection in projections:
@@ -170,41 +201,41 @@ def fusion(projections, R, V):
 
     return clusters
 
+
+# Testing
 nr_points = 40
 nr_cameras = 6
-R = 1
-V = 1
+R = 0.5
+V = 0.5
 
 # Generate random projections from various cameras
 projectionCameraIndexes = [random.randrange(nr_cameras) for i in range(nr_points)]
 projectionDetectionIndexes = [projectionCameraIndexes[0:i].count(projectionCameraIndexes[i]) for i in range(nr_points)]
 
-
 projections = [Projection(np.random.uniform(0, 1, 2), np.random.uniform(0, 1, 2),
                           projectionDetectionIndexes[i], projectionCameraIndexes[i]) for i in range(nr_points)]
 projections.sort(key=lambda projection: (projection.camera_index, projection.detection_index))
-for projection in projections:
-    print(projection)
-
 
 # Perform fusion
 clusters = fusion(projections, R, V)
 
+# Print if any clusters are larger than 2
 for cluster in clusters:
     if len(cluster.projections) > 2:
         print('Cluster {} has {} projections'.format(cluster.index, len(cluster.projections)))
 
-# Plot
+# Plot Projections
 fig, axs = plt.subplots(1, 2)
 legends = []
-markers = ['o', 'x', 'P', '^', 's', '*']
+markers = ['o', 'v', '1', 's', 'p', 'P', '*', 'h', 'X', 'D', '<', '>']
+colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan']
 for counter, projection in enumerate(projections):
-
-    marker = markers[projection.camera_index]
-    axs[0].plot(projection.position[0], projection.position[1], marker)
-    axs[1].plot(projection.velocity[0], projection.velocity[1], marker)
-
+    mycolor = colors[projection.camera_index]
+    mymarker = markers[projection.detection_index]
+    axs[0].plot(projection.position[0], projection.position[1], mymarker, color=mycolor)
+    axs[1].plot(projection.velocity[0], projection.velocity[1], mymarker, color=mycolor)
     legends.append('id {}, cam {}'.format(projection.detection_index, projection.camera_index))
+
 axs[0].title.set_text('Positions')
 axs[1].title.set_text('Velocities')
 axs[0].legend(legends, title='Projections', bbox_to_anchor=(-0.05, 1.1), loc='upper right')
@@ -212,25 +243,15 @@ axs[0].axis('equal')
 axs[1].axis('equal')
 
 
+# Plot Clusters
 fig, axs = plt.subplots(1, 2)
 legends = []
 for counter, cluster in enumerate(clusters):
-    if np.floor(counter/10) % 5 == 0:
-        axs[0].plot([proj.position[0] for proj in cluster.projections], [proj.position[1] for proj in cluster.projections], 'o')
-        axs[1].plot([proj.velocity[0] for proj in cluster.projections], [proj.velocity[1] for proj in cluster.projections], 'o')
-    elif np.floor(counter/10) % 5 == 1:
-        axs[0].plot([proj.position[0] for proj in cluster.projections], [proj.position[1] for proj in cluster.projections], 'x')
-        axs[1].plot([proj.velocity[0] for proj in cluster.projections], [proj.velocity[1] for proj in cluster.projections], 'x')
-    elif np.floor(counter/10) % 5 == 2:
-        axs[0].plot([proj.position[0] for proj in cluster.projections], [proj.position[1] for proj in cluster.projections], 'P')
-        axs[1].plot([proj.velocity[0] for proj in cluster.projections], [proj.velocity[1] for proj in cluster.projections], 'P')
-    elif np.floor(counter/10) % 5 == 3:
-        axs[0].plot([proj.position[0] for proj in cluster.projections], [proj.position[1] for proj in cluster.projections], '^')
-        axs[1].plot([proj.velocity[0] for proj in cluster.projections], [proj.velocity[1] for proj in cluster.projections], '^')
-    else:
-        axs[0].plot([proj.position[0] for proj in cluster.projections], [proj.position[1] for proj in cluster.projections], 's')
-        axs[1].plot([proj.velocity[0] for proj in cluster.projections], [proj.velocity[1] for proj in cluster.projections], 's')
+    marker_index = int(np.floor(counter/10))
+    axs[0].plot([proj.position[0] for proj in cluster.projections], [proj.position[1] for proj in cluster.projections], markers[marker_index])
+    axs[1].plot([proj.velocity[0] for proj in cluster.projections], [proj.velocity[1] for proj in cluster.projections], markers[marker_index])
     legends.append('{}'.format(cluster.index))
+
 axs[0].title.set_text('Positions')
 axs[1].title.set_text('Velocities')
 axs[0].legend(legends, title='Clusters', bbox_to_anchor=(-0.05, 1), loc='upper right')
@@ -238,4 +259,3 @@ axs[0].axis('equal')
 axs[1].axis('equal')
 
 plt.show()
-print('Placeholder')
