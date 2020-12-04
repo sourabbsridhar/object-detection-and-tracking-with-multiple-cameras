@@ -81,7 +81,8 @@ for path in PATH_in_all:
             output.append([frame, -1, xmin, ymin, xmax, ymax, 1, name_dict[obj], 1, -1])
         
         # Sort the list with respect to the frames
-        output.sort(key=lambda x : x[0])
+
+        output.sort(key=lambda x : int(x[0]))
 
         # Add subfolders to output folder, same structure as input folder
         PATH_out = str.replace(path, 'annotations','generated_detections')

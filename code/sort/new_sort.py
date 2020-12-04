@@ -5,12 +5,18 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from skimage import io
+import scipy.linalg
 
 import cv2
 import glob
 import time
 import argparse
-from filterpy.kalman import KalmanFilter
+#from filterpy.kalman import KalmanFilter
+
+# Deepsort functions
+from deep_sort import nn_matching
+from deep_sort.detection import Detection
+from deep_sort.tracker import Tracker
 
 # Comparing metric
 import motmetrics as mm
@@ -77,6 +83,8 @@ def convert_x_to_bbox(x,score=None):
   else:
     return np.array([x[0]-w/2.,x[1]-h/2.,x[0]+w/2.,x[1]+h/2.,score]).reshape((1,5))
 
+##### REPLACE KALMAN ##########
+
 
 class KalmanBoxTracker(object):
   """
@@ -87,12 +95,14 @@ class KalmanBoxTracker(object):
     """
     Initialises a tracker using initial bounding box.
     """
+    # REWRITE THE KALMAN EQUATIONS
+
     #define constant velocity model
     self.kf = KalmanFilter(dim_x=7, dim_z=4) 
-    self.kf.F = np.array([[1,0,0,0,1,0,0],[0,1,0,0,0,1,0],[0,0,1,0,0,0,1],[0,0,0,1,0,0,0],  [0,0,0,0,1,0,0],[0,0,0,0,0,1,0],[0,0,0,0,0,0,1]])
+    self.kf.F = np.array([[1,0,0,0,1,0,0],[0,1,0,0,0,1,0],[0,0,1,0,0,0,1],[0,0,0,1,0,0,0], [0,0,0,0,1,0,0],[0,0,0,0,0,1,0],[0,0,0,0,0,0,1]])
     self.kf.H = np.array([[1,0,0,0,0,0,0],[0,1,0,0,0,0,0],[0,0,1,0,0,0,0],[0,0,0,1,0,0,0]])
 
-    self.kf.R[2:,2:] *= 10.
+    self.kf.R[2:,2:] *= 10. # 10.
     self.kf.P[4:,4:] *= 1000. #give high uncertainty to the unobservable initial velocities
     self.kf.P *= 10.
     self.kf.Q[-1,-1] *= 0.01
@@ -123,7 +133,7 @@ class KalmanBoxTracker(object):
     """
     if((self.kf.x[6]+self.kf.x[2])<=0):
       self.kf.x[6] *= 0.0
-    self.kf.predict()
+    self.kf.predict() # KalmanFilter from filterpy.kalman
     self.age += 1
     if(self.time_since_update>0):
       self.hit_streak = 0
@@ -136,6 +146,8 @@ class KalmanBoxTracker(object):
     Returns the current bounding box estimate.
     """
     return convert_x_to_bbox(self.kf.x)
+
+##############################################
 
 
 def associate_detections_to_trackers(detections,trackers,iou_threshold = 0.3):
@@ -152,7 +164,7 @@ def associate_detections_to_trackers(detections,trackers,iou_threshold = 0.3):
   if min(iou_matrix.shape) > 0:
     a = (iou_matrix > iou_threshold).astype(np.int32)
     if a.sum(1).max() == 1 and a.sum(0).max() == 1:
-        matched_indices = np.stack(np.where(a), axis=1)
+      matched_indices = np.stack(np.where(a), axis=1)
     else:
       matched_indices = linear_assignment(-iou_matrix)
   else:
@@ -217,16 +229,17 @@ class Sort(object):
     for t in reversed(to_del):
       self.trackers.pop(t)
     
-    matched, unmatched_dets, unmatched_trks = associate_detections_to_trackers(dets,trks, self.iou_threshold)
+    # Put detection and tracks in respective list depending on if it could be match given the criterias
+    matched, unmatched_dets, unmatched_trks = associate_detections_to_trackers(dets, trks, self.iou_threshold)
 
-    # update matched trackers with assigned detections
+    # update matched trackers with assigned detections, m = (det_index, track_index)
     for m in matched:
-      self.trackers[m[1]].update(dets[m[0], :])
+      self.trackers[m[1]].update(dets[m[0], :]) # Update Track(m[1]) with detection[m[0]]
 
     # create and initialise new trackers for unmatched detections
     for i in unmatched_dets:
       trk = KalmanBoxTracker(dets[i,:])
-      self.trackers.append(trk)
+      self.trackers.append(trk) # Start new tracking of the detection that did not find any match with currnt trackings
 
     i = len(self.trackers)
     for trk in reversed(self.trackers):
@@ -270,11 +283,6 @@ OUTPUT_PATH = PATH + 'output/'
 if not os.path.exists(OUTPUT_PATH): 
   os.makedirs(OUTPUT_PATH)
 
-# If display option prepare figure
-if(display):
-  plt.ion()
-  fig = plt.figure()
-  ax1 = fig.add_subplot(111, aspect='equal')
 
 # Loop through all sequences (viedo0, video1 video2 etc.)
 sequences = glob.glob(DET_PATH + '/*')
@@ -287,9 +295,9 @@ for seq in sequences:
   #print(seq_dets)
 
   # Create instance of the SORT tracker
-  mot_tracker = Sort(max_age=20,  # "Maximum number of frames to keep alive a track without associated detections."
-                      min_hits=5, # Minimum number of associated detections before track is initialised
-                      iou_threshold=0.5) # Minimum IOU for match
+  mot_tracker = Sort(max_age=90,  # "Maximum number of frames to keep alive a track without associated detections."
+                      min_hits=0, # Minimum number of associated detections before track is initialised
+                      iou_threshold=0.3) # Minimum IOU for match
   
 
   if not os.path.exists(OUTPUT_PATH + seq): 

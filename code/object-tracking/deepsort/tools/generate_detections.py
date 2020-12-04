@@ -1,5 +1,5 @@
 # vim: expandtab:ts=4:sw=4
-# python tools/generate_detections.py --model=mars-small128.pb  --mot_dir=./MOT16/train --output_dir=./detections/MOT16_train
+# python ./code/object-tracking/deepsort/tools/generate_detections.py --model=./code/object-tracking/deepsort/mars-small128.pb  --mot_dir=./dataset/MOT16/train --output_dir=./code/object-tracking/deepsort/detections/MOT16_train
 import os
 import errno
 import argparse
@@ -152,7 +152,12 @@ def generate_detections(encoder, mot_dir, output_dir, detection_dir=None):
         print("Processing %s" % sequence)
         sequence_dir = os.path.join(mot_dir, sequence)
 
+
         image_dir = os.path.join(sequence_dir, "img1")
+
+        print(image_dir)
+        print(os.listdir(image_dir))
+
         image_filenames = {
             int(os.path.splitext(f)[0]): os.path.join(image_dir, f)
             for f in os.listdir(image_dir)}
