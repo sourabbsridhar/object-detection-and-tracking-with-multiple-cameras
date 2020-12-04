@@ -94,18 +94,14 @@ def fusion(projections, R, V):
 
         sigma_list = [elem for elem in clusters + projections if elem not in clustered_projections]
 
-        for theta in sigma_list:
+        for i_theta, theta in enumerate(sigma_list):
 
             # Pre-computation for condition 4 (only for computational efficiency)
             if strict_conditions:
                 argmin_theta = np.argmin([objective_function(theta, gamma, R, V)
                                           if theta != gamma else np.inf for gamma in sigma_list])
 
-            for sigma in sigma_list:
-
-                # Make sure theta and sigma are not the same element
-                if theta == sigma:
-                    continue
+            for sigma in sigma_list[i_theta+1:]:
 
                 # Condition 1-2: Make sure that theta and sigma aren't or don't contain projections from the same camera
                 if type(theta) == Projection and type(sigma) == Projection:
@@ -207,15 +203,15 @@ def fusion(projections, R, V):
 
 # Testing
 nr_points = 40
-nr_cameras = 6
-R = 0.5
-V = 0.5
+nr_cameras = 5
+R = 1
+V = 1
 
 # Generate random projections from various cameras
 projectionCameraIndexes = [random.randrange(nr_cameras) for i in range(nr_points)]
 projectionDetectionIndexes = [projectionCameraIndexes[0:i].count(projectionCameraIndexes[i]) for i in range(nr_points)]
 
-projections = [Projection(np.random.uniform(0, 1, 2), np.random.uniform(0, 1, 2),
+projections = [Projection(np.random.uniform(-1, 1, 2), np.random.uniform(-1, 1, 2),
                           projectionDetectionIndexes[i], projectionCameraIndexes[i]) for i in range(nr_points)]
 projections.sort(key=lambda projection: (projection.camera_index, projection.detection_index))
 
@@ -228,15 +224,17 @@ for cluster in clusters:
         print('Cluster {} has {} projections'.format(cluster.index, len(cluster.projections)))
 
 # Plot Projections
-fig, axs = plt.subplots(1, 2)
 legends = []
 markers = ['o', 'v', '1', 's', 'p', 'P', '*', 'h', 'X', 'D', '<', '>']
 colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan']
+size = 10
+
+fig, axs = plt.subplots(1, 2)
 for counter, projection in enumerate(projections):
     mycolor = colors[projection.camera_index]
-    mymarker = markers[projection.detection_index]
-    axs[0].plot(projection.position[0], projection.position[1], mymarker, color=mycolor)
-    axs[1].plot(projection.velocity[0], projection.velocity[1], mymarker, color=mycolor)
+    mymarker = markers[min(projection.detection_index,len(markers)-1)]
+    axs[0].plot(projection.position[0], projection.position[1], mymarker, color=mycolor, markersize=size)
+    axs[1].plot(projection.velocity[0], projection.velocity[1], mymarker, color=mycolor, markersize=size)
     legends.append('id {}, cam {}'.format(projection.detection_index, projection.camera_index))
 
 axs[0].title.set_text('Positions')
@@ -251,8 +249,8 @@ fig, axs = plt.subplots(1, 2)
 legends = []
 for counter, cluster in enumerate(clusters):
     marker_index = int(np.floor(counter/10))
-    axs[0].plot([proj.position[0] for proj in cluster.projections], [proj.position[1] for proj in cluster.projections], markers[marker_index])
-    axs[1].plot([proj.velocity[0] for proj in cluster.projections], [proj.velocity[1] for proj in cluster.projections], markers[marker_index])
+    axs[0].plot([proj.position[0] for proj in cluster.projections], [proj.position[1] for proj in cluster.projections], markers[marker_index], markersize=size)
+    axs[1].plot([proj.velocity[0] for proj in cluster.projections], [proj.velocity[1] for proj in cluster.projections], markers[marker_index], markersize=size)
     legends.append('{}'.format(cluster.index))
 
 axs[0].title.set_text('Positions')
