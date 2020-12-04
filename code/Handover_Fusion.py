@@ -1,11 +1,5 @@
-# Imports for clustering
 import numpy as np
 from copy import deepcopy
-
-# Imports for testing and plotting, not necessary for clustering
-import random
-import matplotlib.pyplot as plt
-
 
 
 class Projection:
@@ -65,8 +59,8 @@ class Cluster:
         return True
 
     def update_averages(self):
-        self.position_average = np.mean([projection.position for projection in self.projections])
-        self.velocity_average = np.mean([projection.velocity for projection in self.projections])
+        self.position_average = np.mean([projection.position for projection in self.projections], axis=0)
+        self.velocity_average = np.mean([projection.velocity for projection in self.projections], axis=0)
 
     def get_position(self):
         return self.position_average
@@ -201,62 +195,82 @@ def fusion(projections, R, V):
     return clusters
 
 
-# Testing
-nr_points = 40
-nr_cameras = 5
-R = 1
-V = 1
+if __name__ == '__main__':
 
-# Generate random projections from various cameras
-projectionCameraIndexes = [random.randrange(nr_cameras) for i in range(nr_points)]
-projectionDetectionIndexes = [projectionCameraIndexes[0:i].count(projectionCameraIndexes[i]) for i in range(nr_points)]
+    # Imports for testing and plotting, not necessary for clustering
+    import random
+    import matplotlib.pyplot as plt
 
-projections = [Projection(np.random.uniform(-1, 1, 2), np.random.uniform(-1, 1, 2),
-                          projectionDetectionIndexes[i], projectionCameraIndexes[i]) for i in range(nr_points)]
-projections.sort(key=lambda projection: (projection.camera_index, projection.detection_index))
+    # Testing
+    nr_points = 20
+    nr_cameras = 3
+    R = 1
+    V = 1
 
-# Perform fusion
-clusters = fusion(projections, R, V)
+    # Generate random projections from various cameras
+    projectionCameraIndexes = [random.randrange(nr_cameras) for i in range(nr_points)]
+    projectionDetectionIndexes = [projectionCameraIndexes[0:i].count(projectionCameraIndexes[i]) for i in range(nr_points)]
 
-# Print if any clusters are larger than 2
-for cluster in clusters:
-    if len(cluster.projections) > 2:
-        print('Cluster {} has {} projections'.format(cluster.index, len(cluster.projections)))
+    projections = [Projection(np.random.uniform(-1, 1, 2), np.random.uniform(-1, 1, 2),
+                              projectionDetectionIndexes[i], projectionCameraIndexes[i]) for i in range(nr_points)]
+    projections.sort(key=lambda projection: (projection.camera_index, projection.detection_index))
 
-# Plot Projections
-legends = []
-markers = ['o', 'v', '1', 's', 'p', 'P', '*', 'h', 'X', 'D', '<', '>']
-colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan']
-size = 10
+    # Perform fusion
+    clusters = fusion(projections, R, V)
 
-fig, axs = plt.subplots(1, 2)
-for counter, projection in enumerate(projections):
-    mycolor = colors[projection.camera_index]
-    mymarker = markers[min(projection.detection_index,len(markers)-1)]
-    axs[0].plot(projection.position[0], projection.position[1], mymarker, color=mycolor, markersize=size)
-    axs[1].plot(projection.velocity[0], projection.velocity[1], mymarker, color=mycolor, markersize=size)
-    legends.append('id {}, cam {}'.format(projection.detection_index, projection.camera_index))
+    # Print if any clusters are larger than 2
+    for cluster in clusters:
+        if len(cluster.projections) > 2:
+            print('Cluster {} has {} projections'.format(cluster.index, len(cluster.projections)))
 
-axs[0].title.set_text('Positions')
-axs[1].title.set_text('Velocities')
-axs[0].legend(legends, title='Projections', bbox_to_anchor=(-0.05, 1.1), loc='upper right')
-axs[0].axis('equal')
-axs[1].axis('equal')
+    # Plot Projections
+    legends = []
+    markers = ['o', '1', 's', 'p', 'v', 'P', '*', 'h', 'X', 'D', '<', '>']
+    colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red', 'tab:purple', 'brown', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan']
+    size = 10
+
+    fig, axs = plt.subplots(1, 2)
+    for counter, projection in enumerate(projections):
+        mycolor = colors[projection.camera_index]
+        mymarker = markers[min(projection.detection_index,len(markers)-1)]
+        axs[0].plot(projection.position[0], projection.position[1], mymarker, color=mycolor, markersize=size)
+        axs[1].plot(projection.velocity[0], projection.velocity[1], mymarker, color=mycolor, markersize=size)
+        legends.append('id {}, cam {}'.format(projection.detection_index, projection.camera_index))
+
+    axs[0].title.set_text('Positions')
+    axs[1].title.set_text('Velocities')
+    axs[0].legend(legends, title='Projections', bbox_to_anchor=(-0.05, 1.1), loc='upper right')
+    axs[0].axis('equal')
+    axs[1].axis('equal')
 
 
-# Plot Clusters
-fig, axs = plt.subplots(1, 2)
-legends = []
-for counter, cluster in enumerate(clusters):
-    marker_index = int(np.floor(counter/10))
-    axs[0].plot([proj.position[0] for proj in cluster.projections], [proj.position[1] for proj in cluster.projections], markers[marker_index], markersize=size)
-    axs[1].plot([proj.velocity[0] for proj in cluster.projections], [proj.velocity[1] for proj in cluster.projections], markers[marker_index], markersize=size)
-    legends.append('{}'.format(cluster.index))
+    # Plot Cluster projections and clusters
+    fig, axs = plt.subplots(1, 2)
+    fig2, axs2 = plt.subplots(1, 2)
 
-axs[0].title.set_text('Positions')
-axs[1].title.set_text('Velocities')
-axs[0].legend(legends, title='Clusters', bbox_to_anchor=(-0.05, 1), loc='upper right')
-axs[0].axis('equal')
-axs[1].axis('equal')
+    legends = []
+    for counter, cluster in enumerate(clusters):
+        marker_index = int(np.floor(counter/10))
+        axs[0].plot([proj.position[0] for proj in cluster.projections], [proj.position[1] for proj in cluster.projections], markers[marker_index], markersize=size)
+        axs[1].plot([proj.velocity[0] for proj in cluster.projections], [proj.velocity[1] for proj in cluster.projections], markers[marker_index], markersize=size)
 
-plt.show()
+        cluster_pos = cluster.get_position()
+        cluster_vel = cluster.get_velocity()
+        axs2[0].plot(cluster_pos[0], cluster_pos[1], markers[marker_index], markersize=size)
+        axs2[1].plot(cluster_vel[0], cluster_vel[1], markers[marker_index], markersize=size)
+        legends.append('{}'.format(cluster.index))
+
+    axs[0].title.set_text('Positions')
+    axs[1].title.set_text('Velocities')
+    axs[0].legend(legends, title='Clusters', bbox_to_anchor=(-0.05, 1), loc='upper right')
+    axs[0].axis('equal')
+    axs[1].axis('equal')
+
+    axs2[0].title.set_text('Positions')
+    axs2[1].title.set_text('Velocities')
+    axs2[0].legend(legends, title='Clusters', bbox_to_anchor=(-0.05, 1), loc='upper right')
+    axs2[0].axis('equal')
+    axs2[1].axis('equal')
+
+
+    plt.show()
