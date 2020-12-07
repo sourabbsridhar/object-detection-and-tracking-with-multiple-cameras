@@ -4,6 +4,8 @@ import argparse
 from pathlib import Path
 
 import code.object_detection as ob
+import code.project_2d_position as prj2
+import code.fuse_2d_position as fuspos
 
 def evaluateArguments(input_path, detection_weights_path, tracking_weights_path, camera_parameters_path, output_path, verbose):
 
@@ -44,8 +46,16 @@ def evaluateSoftware(verbose):
 
 def excecuteSoftware(input_path, detection_weights_path, tracking_weights_path, camera_parameters_path, output_path, verbose):
 
-    ob.display_input(input_path)
-    ob.object_detection(input_path)
+    for frameID in range(1):
+
+        ob.display_input(input_path, frameID)
+        detections_2d_position = ob.object_detection(input_path, frameID)
+        projection_3d_position = prj2.project_2d_position(detections_2d_position)
+        prj2.display_3d_positions(projection_3d_position)
+        fused_3d_position = fuspos.fuse_3d_position(projection_3d_position)
+        prj2.display_3d_positions(fused_3d_position)
+
+
 
     """
     Object detection
@@ -89,9 +99,6 @@ if __name__ == "__main__":
 
     areArgumentsValid = evaluateArguments(input_path, detection_weights_path, tracking_weights_path, camera_parameters_path, output_path, verbose)
     isSoftwareValid = evaluateSoftware(verbose)
-
-    print("areArgumentsValid = " + str(areArgumentsValid))
-    print("isSoftwareValid = " + str(isSoftwareValid))
 
     if ((areArgumentsValid == True) and (isSoftwareValid == True)):
         excecuteSoftware(input_path, detection_weights_path, tracking_weights_path, camera_parameters_path, output_path, verbose)

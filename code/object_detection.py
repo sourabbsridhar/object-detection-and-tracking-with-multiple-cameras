@@ -6,76 +6,74 @@ import json
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-def display_input(input_path):
+class detectedObject:
+    def __init__(self, frame):
+        self.frame = frame
+        self.personID = list()
+        self.positionID = list()
+        self.views = list()
 
-    print("In function display_input()")
-    print("input_path: " + str(input_path))
+    def __str__(self):
+        outputString = ""
+        for index in range(len(self.personID)):
+            outputString = outputString + "\n\nPerson ID: {}\nPosition ID: {}\nViews:\n{}".format(self.personID[index], self.positionID[index], self.views[index])
+        return outputString
 
-    camera_1_images = str(input_path) + "\\**\\C1\\**\\*.png"
-    camera_1_images = glob.glob(camera_1_images, recursive=True)
-    camera_1_images = sorted(camera_1_images)
+    def getDetections(self):
+        with open(self.frame) as f:
+            overallData = json.load(f)
+            for person in overallData:
+                self.personID.append(person["personID"])
+                self.positionID.append(person["positionID"])
+                for camera_view in person["views"]:
+                    camera_view["x"] = (camera_view["xmin"] + camera_view["xmax"])/2
+                    camera_view["y"] = (camera_view["ymin"] + camera_view["ymax"])/2
+                self.views.append(person["views"])
+        return self
+                
 
-    camera_2_images = str(input_path) + "\\**\\C2\\**\\*.png"
-    camera_2_images = glob.glob(camera_2_images, recursive=True)
-    camera_2_images = sorted(camera_2_images)
+def display_input(input_path, frameID):
+    camera_folders = ["C1", "C2", "C3", "C4", "C5", "C6", "C7"]
+    camera_images = list()
 
-    camera_3_images = str(input_path) + "\\**\\C3\\**\\*.png"
-    camera_3_images = glob.glob(camera_3_images, recursive=True)
-    camera_3_images = sorted(camera_3_images)
+    for folder_name in camera_folders:
+        current_camera_images = str(input_path) + "\\**\\" + folder_name + "\\**\\*.png"
+        current_camera_images = glob.glob(current_camera_images, recursive=True)
+        current_camera_images = sorted(current_camera_images)
+        camera_images.append(current_camera_images)
 
-    camera_4_images = str(input_path) + "\\**\\C4\\**\\*.png"
-    camera_4_images = glob.glob(camera_4_images, recursive=True)
-    camera_4_images = sorted(camera_4_images)
+    img_path = list()
+    for camera_index in range(len(camera_images)):
+        img_path.append(camera_images[camera_index][frameID])
 
-    camera_5_images = str(input_path) + "\\**\\C5\\**\\*.png"
-    camera_5_images = glob.glob(camera_5_images, recursive=True)
-    camera_5_images = sorted(camera_5_images)
+    fig, axs = plt.subplots(3, 3)
+    img1 = mpimg.imread(img_path[0])
+    img2 = mpimg.imread(img_path[1])
+    img3 = mpimg.imread(img_path[2])
+    img4 = mpimg.imread(img_path[3])
+    img5 = mpimg.imread(img_path[4])
+    img6 = mpimg.imread(img_path[5])
+    img7 = mpimg.imread(img_path[6])
+    axs[0, 0].imshow(img1)
+    axs[0, 1].imshow(img2)
+    axs[0, 2].imshow(img3)
+    axs[1, 1].imshow(img4)
+    axs[2, 0].imshow(img5)
+    axs[2, 1].imshow(img6)
+    axs[2, 2].imshow(img7)
+    plt.show(block=False)
+    plt.pause(1)
+    plt.close()
 
-    camera_6_images = str(input_path) + "\\**\\C6\\**\\*.png"
-    camera_6_images = glob.glob(camera_6_images, recursive=True)
-    camera_6_images = sorted(camera_6_images)
+def object_detection(input_path, frameID):
 
-    camera_7_images = str(input_path) + "\\**\\C7\\**\\*.png"
-    camera_7_images = glob.glob(camera_7_images, recursive=True)
-    camera_7_images = sorted(camera_7_images)
+    annotation_positions = str(input_path) + "\\**\\annotations_positions\\**\\*.json"
+    annotation_positions = glob.glob(annotation_positions, recursive=True)
+    annotation_positions = sorted(annotation_positions)
 
-    assert (len(camera_1_images) == len(camera_2_images)) and (len(camera_2_images) == len(camera_3_images)) and (len(camera_3_images) == len(camera_4_images)) and \
-        (len(camera_4_images) == len(camera_5_images)) and (len(camera_5_images) == len(camera_6_images)) and (len(camera_6_images) == len(camera_7_images)), "[ERROR]"
+    obj = detectedObject(annotation_positions[frameID])
+    detections = obj.getDetections()
 
-    for iterator in range(len(camera_1_images)):
-
-        """
-        print("camera_1_images[iterator] = " + camera_1_images[iterator])
-        print("camera_2_images[iterator] = " + camera_2_images[iterator])
-        print("camera_3_images[iterator] = " + camera_3_images[iterator])
-        print("camera_4_images[iterator] = " + camera_4_images[iterator])
-        print("camera_5_images[iterator] = " + camera_5_images[iterator])
-        print("camera_6_images[iterator] = " + camera_6_images[iterator])
-        print("camera_7_images[iterator] = " + camera_7_images[iterator])
-        """
-
-        img1 = mpimg.imread(camera_1_images[iterator])
-        img2 = mpimg.imread(camera_2_images[iterator])
-        img3 = mpimg.imread(camera_3_images[iterator])
-        img4 = mpimg.imread(camera_4_images[iterator])
-        img5 = mpimg.imread(camera_5_images[iterator])
-        img6 = mpimg.imread(camera_6_images[iterator])
-        img7 = mpimg.imread(camera_7_images[iterator])
-
-        fig, axs = plt.subplots(3, 3)
-        axs[0, 0].imshow(img1)
-        axs[0, 1].imshow(img2)
-        axs[0, 2].imshow(img3)
-        axs[1, 1].imshow(img4)
-        axs[2, 0].imshow(img5)
-        axs[2, 1].imshow(img6)
-        axs[2, 2].imshow(img7)
-        plt.show()
-        plt.close()
-        
-
-def object_detection(input_path):
-
-
+    return detections
     
-    pass
+
