@@ -3,6 +3,8 @@
 import argparse
 from pathlib import Path
 
+import code.object_detection as ob
+
 def evaluateArguments(input_path, detection_weights_path, tracking_weights_path, camera_parameters_path, output_path, verbose):
 
     evaluationSuccessful = True
@@ -41,6 +43,9 @@ def evaluateSoftware(verbose):
     return True
 
 def excecuteSoftware(input_path, detection_weights_path, tracking_weights_path, camera_parameters_path, output_path, verbose):
+
+    ob.display_input(input_path)
+    ob.object_detection(input_path)
 
     """
     Object detection
@@ -84,6 +89,9 @@ if __name__ == "__main__":
 
     areArgumentsValid = evaluateArguments(input_path, detection_weights_path, tracking_weights_path, camera_parameters_path, output_path, verbose)
     isSoftwareValid = evaluateSoftware(verbose)
+
+    print("areArgumentsValid = " + str(areArgumentsValid))
+    print("isSoftwareValid = " + str(isSoftwareValid))
 
     if ((areArgumentsValid == True) and (isSoftwareValid == True)):
         excecuteSoftware(input_path, detection_weights_path, tracking_weights_path, camera_parameters_path, output_path, verbose)
