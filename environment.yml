@@ -1,4 +1,4 @@
-name: ssy226
+name: multiobjtrack
 channels:
   - defaults
 dependencies:
@@ -26,5 +26,5 @@ dependencies:
     - pyparsing==2.4.7
     - python-dateutil==2.8.1
     - six==1.15.0
-prefix: C:\Users\soura\.conda\envs\ssy226
+prefix: C:\Users\soura\.conda\envs\multiobjtrack
 
