@@ -15,7 +15,15 @@ Or, to install all the dependencies directly, please run the following command b
 *To be added*
 
 ## Execution Guide
-*To be added*
+1. To acivate the Conda environment, please run the following command below:
+
+`conda activate multiobjtrack`
+
+2. *To be added*
+
+3. To deactivate the Conda environment, please run the following command below:
+
+`conda deactivate`
 
 ## Authors
 * Alvin Combrink
