@@ -41,7 +41,7 @@ class CameraFrame():
                     individualCameraView["y"] = (individualCameraView["ymin"] + individualCameraView["ymax"])/2
                 currentDetection.setCameraViews(individualObject["views"])
                 self.overallDetections.append(currentDetection)
-        return self.overallDetections                
+        return self.overallDetections            
 
 def displayInputFrame(inputPath, frameID):
     cameraFoldersName = ["C1", "C2", "C3", "C4", "C5", "C6", "C7"]
