@@ -195,6 +195,27 @@ def fusion(projections, R, V):
     return clusters
 
 
+class OutputObject():
+    def __init__(self, position, velocity):
+        self.position = position
+        self.velocity = velocity
+
+def output_object_tracking(output_objects, clusters, deltaTime):
+
+    # Define model
+    F = np.array([[1, 0, deltaTime, 0], [0, 1, 0, deltaTime], [0, 0, 1, 0], [0, 0, 0, 1]]) # Process model
+    Q_bar = 1 # Process noise magnitude
+    Q = np.array([[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) # Process noise
+
+
+    # Kalman prediction of output_object states
+    predictedStates = list()
+    predictedStateCov = list()
+    for object in output_objects:
+        predictedStates.append(np.dot(F, object.get_state()))
+
+
+
 if __name__ == '__main__':
 
     # Imports for testing and plotting, not necessary for clustering
@@ -217,6 +238,11 @@ if __name__ == '__main__':
 
     # Perform fusion
     clusters = fusion(projections, R, V)
+
+    # Perform Kalman Tracking
+    output_objects = list()
+    output_objects = output_object_tracking(output_objects, clusters, 0.1)
+
 
     # Print if any clusters are larger than 2
     for cluster in clusters:
