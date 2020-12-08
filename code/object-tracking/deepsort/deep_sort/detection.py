@@ -26,24 +26,33 @@ class Detection(object):
 
     """
 
-    def __init__(self, tlwh, confidence, feature):
-        self.tlwh = np.asarray(tlwh, dtype=np.float)
+    def __init__(self, tlbr, confidence, feature):
+        self.tlbr = np.asarray(tlbr, dtype=np.float)
         self.confidence = float(confidence)
         self.feature = np.asarray(feature, dtype=np.float32)
 
-    def to_tlbr(self):
-        """Convert bounding box to format `(min x, min y, max x, max y)`, i.e.,
-        `(top left, bottom right)`.
+    def to_tlwh(self):
+        """Convert bounding box to format `(min x, min y, width, height)`, i.e.,
+        `(top left, width, height)`.
         """
-        ret = self.tlwh.copy()
-        ret[2:] += ret[:2]
+        ret = self.tlbr.copy()
+        ret[2] -= ret[0]
+        ret[3] -= ret[1]
         return ret
 
     def to_xyah(self):
         """Convert bounding box to format `(center x, center y, aspect ratio,
         height)`, where the aspect ratio is `width / height`.
         """
-        ret = self.tlwh.copy()
+        ret = self.tlbr.copy()
         ret[:2] += ret[2:] / 2
         ret[2] /= ret[3]
+        return ret
+
+    def to_tlbr(self, tlwh):
+        """Convert bounding box to format `(min x, min y, max x, max y)`
+        """
+        ret = tlwh.copy()
+        ret[2] += ret[0]
+        ret[3] += ret[1]
         return ret

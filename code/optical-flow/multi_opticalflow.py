@@ -95,9 +95,20 @@ for identity in numbers: # Loop trough every ID found
 # Write states to the txt file states_multiple.txt
 with open("optical-flow/tracked_objects/states_multiple.txt", "w") as fs:
     for line in state:
-            fs.write(str(line) + "\n")
+        fs.write(str(line) + "\n")
 
     
+class OpticalFlow:
+
+    def __init__(self, frame, BBOX, fps=29):
+        self.frame = 0
+        self.last_BBOX = BBOX
+        self.this_BBOX = BBOX
+        self.fps = fps
+
+    def _call(self, frame, BBOX):
+        # Logic for Optical flow
+
 
 
 

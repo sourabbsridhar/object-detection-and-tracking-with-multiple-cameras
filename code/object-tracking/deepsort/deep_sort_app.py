@@ -1,5 +1,5 @@
 # vim: expandtab:ts=4:sw=4
-# python deep_sort_app.py --sequence_dir=./MOT16/train/MOT16-02 --detection_file=./detections/MOT16_train/MOT16-02.npy  --min_confidence=0.3 --nn_budget=100  --display=True
+# python deep_sort_app.py --sequence_dir=/home/jonatan/SSY226/object-detection-and-tracking-with-multiple-cameras/dataset/volvo/angle1 --detection_file=./detections/volvo/angle1.npy  --min_confidence=0.3 --nn_budget=100  --display=True
 from __future__ import division, print_function, absolute_import
 
 import argparse
@@ -41,45 +41,56 @@ def gather_sequence_info(sequence_dir, detection_file):
         * max_frame_idx: Index of the last frame.
 
     """
-    image_dir = os.path.join(sequence_dir, "img1")
+    image_dir = os.path.join(sequence_dir, "img1") # If frames is in folder img1
+
+    # Create dictionary of all image filenames full paths
     image_filenames = {
         int(os.path.splitext(f)[0]): os.path.join(image_dir, f)
         for f in os.listdir(image_dir)}
+    # if groundtruth folder name is gt
     groundtruth_file = os.path.join(sequence_dir, "gt/gt.txt")
 
+    # If detection file exist load the detection (what is in the files????)
     detections = None
     if detection_file is not None:
         detections = np.load(detection_file)
+
+    # If groundtruth file exist load it
     groundtruth = None
     if os.path.exists(groundtruth_file):
         groundtruth = np.loadtxt(groundtruth_file, delimiter=',')
 
+    # if there are images in the dict image_filenames, take the next unprocessed image
     if len(image_filenames) > 0:
         image = cv2.imread(next(iter(image_filenames.values())),
-                           cv2.IMREAD_GRAYSCALE)
+                           cv2.IMREAD_GRAYSCALE) # Read as grayscale
         image_size = image.shape
     else:
         image_size = None
 
     if len(image_filenames) > 0:
-        min_frame_idx = min(image_filenames.keys())
-        max_frame_idx = max(image_filenames.keys())
+        min_frame_idx = min(image_filenames.keys()) # Get the minimum frame number of images
+        max_frame_idx = max(image_filenames.keys()) # Get the maximum frame number of images
     else:
-        min_frame_idx = int(detections[:, 0].min())
-        max_frame_idx = int(detections[:, 0].max())
+        min_frame_idx = int(detections[:, 0].min()) # If no frames left take the min detection frame
+        max_frame_idx = int(detections[:, 0].max()) # same for max
 
-    info_filename = os.path.join(sequence_dir, "seqinfo.ini")
+    info_filename = os.path.join(sequence_dir, "seqinfo.ini") # Get the sequence info file path
+    # If it exist, save sequence info as a dictionary
     if os.path.exists(info_filename):
         with open(info_filename, "r") as f:
             line_splits = [l.split('=') for l in f.read().splitlines()[1:]]
             info_dict = dict(
                 s for s in line_splits if isinstance(s, list) and len(s) == 2)
 
-        update_ms = 1000 / int(info_dict["frameRate"])
+        update_ms = 1000 / int(info_dict["frameRate"]) # Set the update time proportional to FPS
     else:
         update_ms = None
 
+    # Set the feature dimensions of the detections, now 137-10=127
     feature_dim = detections.shape[1] - 10 if detections is not None else 0
+
+    # Define a dictionary with the specific
     seq_info = {
         "sequence_name": os.path.basename(sequence_dir),
         "image_filenames": image_filenames,
@@ -171,6 +182,8 @@ def run(sequence_dir, detection_file, output_file, min_confidence,
         detections = create_detections(
             seq_info["detections"], frame_idx, min_detection_height)
         detections = [d for d in detections if d.confidence >= min_confidence]
+
+        # TODO: Check the format of detections and rewrite it
 
         # Run non-maxima suppression.
         boxes = np.array([d.tlwh for d in detections])

@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import matplotlib
-matplotlib.use('TkAgg')
+#matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from skimage import io
@@ -11,7 +11,7 @@ import cv2
 import glob
 import time
 import argparse
-#from filterpy.kalman import KalmanFilter
+from filterpy.kalman import KalmanFilter
 
 # Deepsort functions
 from deep_sort import nn_matching

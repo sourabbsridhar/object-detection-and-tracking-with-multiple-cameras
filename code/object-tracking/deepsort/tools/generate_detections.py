@@ -90,7 +90,7 @@ class ImageEncoder(object):
         self.feature_dim = self.output_var.get_shape().as_list()[-1]
         self.image_shape = self.input_var.get_shape().as_list()[1:]
 
-    def __call__(self, data_x, batch_size=32):
+    def __call__(self, data_x, batch_size=1):
         out = np.zeros((len(data_x), self.feature_dim), np.float32)
         _run_in_batches(
             lambda x: self.session.run(self.output_var, feed_dict=x),
@@ -99,7 +99,8 @@ class ImageEncoder(object):
 
 
 def create_box_encoder(model_filename, input_name="images",
-                       output_name="features", batch_size=32):
+                       output_name="features", batch_size=1):
+
     image_encoder = ImageEncoder(model_filename, input_name, output_name)
     image_shape = image_encoder.image_shape
 
@@ -153,7 +154,7 @@ def generate_detections(encoder, mot_dir, output_dir, detection_dir=None):
         sequence_dir = os.path.join(mot_dir, sequence)
 
 
-        image_dir = os.path.join(sequence_dir, "img1")
+        image_dir = os.path.join(sequence_dir, "frames")
 
         print(image_dir)
         print(os.listdir(image_dir))

@@ -4,6 +4,7 @@ import os
 import glob
 import csv
 from random import random
+from random import randint
 
 
 '''
@@ -18,22 +19,21 @@ from random import random
     9   generated. If 1, the annotation was automatically interpolated.
     10  label. The label for this annotation, enclosed in quotation marks.
 '''
-
+# Define Image size to generate false detections at
+IM_WIDTH = 1424
+IM_HEIGHT = 1088
 #PATH = "/Users/divyakara/Documents/Chalmers/Master/Year2/SSY226- Design_Project/GitLab/object-detection-and-tracking-with-multiple-cameras/code/drone-filter/annotations/"
 # Path for input data
 PATH = "/home/jonatan/SSY226/object-detection-and-tracking-with-multiple-cameras/code/drone-filter/annotations/"
 
-# Folder for output data
-PATH_out = "/home/jonatan/SSY226/object-detection-and-tracking-with-multiple-cameras/code/drone-filter/generated-detections/"
-
 # All paths in input folder
 PATH_in_all = glob.glob(PATH+'*/*/*.txt')
-print(PATH_in_all)
-# Empty list to fill with all output paths
-PATH_out_all = []
+#print(PATH_in_all)
 
 # Loop over all input paths to read data files
 for path in PATH_in_all:
+    # Folder for output data
+    PATH_out = "/home/jonatan/SSY226/object-detection-and-tracking-with-multiple-cameras/dataset/stanford_drone/generated-detections/"
     # Open all input files
     with open(path, "r") as f: # open while in this indent
 
@@ -47,9 +47,10 @@ for path in PATH_in_all:
             lines = line.split(' ') 
             
             # Add noise - Skip some lines
-            PERCENTAGE_NOISE = 0.05
+            PERCENTAGE_NOISE = 0.1
             if random() < PERCENTAGE_NOISE:
                 continue
+                
             
             # Skip if no bounding box
             #if int(lines[2]) == 0:
@@ -78,19 +79,36 @@ for path in PATH_in_all:
             obj = obj.split('"')[1] # Remove "" and \n 
 
             # Change the output to correct format and give labels a number
-            output.append([frame, -1, xmin, ymin, xmax, ymax, 1, name_dict[obj], 1, -1])
+            output.append([frame, -1, xmin, ymin, xmax, ymax, np.max(0.5, random()), name_dict[obj], 1, -1]) # Random since confidence is different
+
+            # Add false positives - Add some false detections
+            PERCENTAGE_FP = 0.1
+            if random() < PERCENTAGE_FP:
+                x1 = IM_WIDTH*random()
+                y1 = IM_HEIGHT*random()
+                x2 = x1 + 70*random()
+                y2 = y1 + 100*random()
+                output.append([frame, -1, x1, y1, x2, y2, random(), randint(0,5), 1, -1])
         
         # Sort the list with respect to the frames
 
         output.sort(key=lambda x : int(x[0]))
 
         # Add subfolders to output folder, same structure as input folder
-        PATH_out = str.replace(path, 'annotations','generated_detections')
+        PATH_out += path.split('/')[-3]
+        PATH_out += '/'
+        PATH_out += path.split('/')[-2]
+        PATH_out += '/det/'
+        #print(PATH_out)
+        #break
 
         # Create directory if it does not exist
         if not os.path.isdir(PATH_out):
             os.makedirs(os.path.dirname(PATH_out), exist_ok=True)
-            
+            print('Created path:', PATH_out)
+        
+        PATH_out += 'det.txt'
+
         # Write to output file    
         with open(PATH_out, "w") as fs:
             for line in output:

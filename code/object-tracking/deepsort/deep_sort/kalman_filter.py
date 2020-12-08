@@ -74,7 +74,7 @@ class KalmanFilter(object):
         mean = np.r_[mean_pos, mean_vel]
 
         std = [
-            2 * self._std_weight_position * measurement[3],
+            2 * self._std_weight_position * measurement[3], # Change height affection to area-affection
             2 * self._std_weight_position * measurement[3],
             1e-2,
             2 * self._std_weight_position * measurement[3],
