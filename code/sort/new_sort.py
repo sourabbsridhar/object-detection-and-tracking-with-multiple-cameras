@@ -291,7 +291,13 @@ for seq in sequences:
   seq = seq.split('/')[-1] # Only want the ending (video#)
   print("Initiate sequence: ", seq)
 
-  seq_dets = np.loadtxt(DET_PATH + seq + '/generated_detections.txt', delimiter=',') #, max_rows=DETECTION_ROWS)
+  # Define all paths to be used
+  FRAME_PATH = PATH + seq + '/frames/'
+  DET_PATH = PATH + seq + '/det/'
+  GT_PATH = PATH + seq + '/gt/'
+  OUTPUT_PATH = PATH + seq + '/output/'
+
+  seq_dets = np.loadtxt(DET_PATH + '/generated_detections.txt', delimiter=',') #, max_rows=DETECTION_ROWS)
   #print(seq_dets)
 
   # Create instance of the SORT tracker
@@ -300,11 +306,11 @@ for seq in sequences:
                       iou_threshold=0.3) # Minimum IOU for match
   
 
-  if not os.path.exists(OUTPUT_PATH + seq): 
-    os.makedirs(OUTPUT_PATH + seq)
+  if not os.path.exists(OUTPUT_PATH): 
+    os.makedirs(OUTPUT_PATH)
   
   # Open output text file to save tracking in
-  with open(OUTPUT_PATH + seq + '/output.txt', 'w') as out_file:
+  with open(OUTPUT_PATH + '/output.txt', 'w') as out_file:
     print("Number of frames = ", int(seq_dets[:,0].max())+1)
     # Loop over all frames in detection file
     for frame in range(int(seq_dets[:,0].max())+1): #detection and frame numbers begin at 1
@@ -320,7 +326,7 @@ for seq in sequences:
       total_time += cycle_time
 
       if(display):
-        im = cv2.imread(FRAME_PATH + seq + '/%d.jpg'%(frame+1))
+        im = cv2.imread(FRAME_PATH + '/%d.jpg'%(frame+1))
         #cv2.imshow("Frame: %d", im)
 
 

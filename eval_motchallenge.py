@@ -114,9 +114,11 @@ def main():
         mm.lap.default_solver = args.id_solver
     summary = mh.compute_many(accs, names=names, metrics=metrics, generate_overall=True)
     print(mm.io.render_summary(summary, formatters=mh.formatters, namemap=mm.io.motchallenge_metric_names))
+    with open('motmetric.txt', 'w') as out_file:
+        print(mm.io.render_summary(summary, formatters=mh.formatters, namemap=mm.io.motchallenge_metric_names),file=out_file)
     logging.info('Completed')
 
-    if 
+    
 
 
 if __name__ == '__main__':

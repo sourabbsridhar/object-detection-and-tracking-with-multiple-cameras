@@ -1,5 +1,6 @@
 # vim: expandtab:ts=4:sw=4
-# python deep_sort_app.py --sequence_dir=/home/jonatan/SSY226/object-detection-and-tracking-with-multiple-cameras/dataset/volvo/angle1 --detection_file=./detections/volvo/angle1.npy  --min_confidence=0.3 --nn_budget=100  --display=True
+# python ./code/object-tracking/deepsort/deep_sort_app.py --sequence_dir=/home/jonatan/SSY226/object-detection-and-tracking-with-multiple-cameras/dataset/stanford_drone/bookstore/video0/ --detection_file=./code/object-tracking/deepsort/detections/stanford_drone/video0.npy  --output_file ./results/stanford_drone/video0.txt  --min_confidence=0.3 --nn_budget=100 --max_cosine_distance=0.2 --min_detection_height=8 --display=False
+
 from __future__ import division, print_function, absolute_import
 
 import argparse
@@ -41,8 +42,8 @@ def gather_sequence_info(sequence_dir, detection_file):
         * max_frame_idx: Index of the last frame.
 
     """
-    image_dir = os.path.join(sequence_dir, "img1") # If frames is in folder img1
-
+    image_dir = os.path.join(sequence_dir, "frames") # If frames is in folder img1
+    print(image_dir)
     # Create dictionary of all image filenames full paths
     image_filenames = {
         int(os.path.splitext(f)[0]): os.path.join(image_dir, f)
@@ -132,6 +133,9 @@ def create_detections(detection_mat, frame_idx, min_height=0):
     detection_list = []
     for row in detection_mat[mask]:
         bbox, confidence, feature = row[2:6], row[6], row[10:]
+        # Change x1,y1,x2,y2 to x1, y1, w,h
+        x1, y1, x2, y2 = bbox
+        bbox = [x1, y1, x2-x1, y2-y1] # x1, y1, w, h
         if bbox[3] < min_height:
             continue
         detection_list.append(Detection(bbox, confidence, feature))
@@ -220,6 +224,7 @@ def run(sequence_dir, detection_file, output_file, min_confidence,
     visualizer.run(frame_callback)
 
     # Store results.
+    print(output_file)
     f = open(output_file, 'w')
     for row in results:
         print('%d,%d,%.2f,%.2f,%.2f,%.2f,1,-1,-1,-1' % (
