@@ -1,79 +1,88 @@
 # Implementation of Object Detection Algorithm (To be provided by the object detection subgroup)
 
-import cv2
 import glob
 import json
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-class detectedObject:
+class Detections:
+    def __init__(self, objectID, objectClass, objectPosition):
+        self.objectID = objectID
+        self.objectClass = objectClass
+        self.objectPosition = objectPosition
+        self.cameraViews = list()
+
+    def __repr__(self):
+        outputString = "\nDetections(objectID = {}, objectClass = {}, objectPosition = {}, cameraViews = {})\n".format(self.objectID,\
+             self.objectClass, self.objectPosition, self.cameraViews)
+        return outputString
+
+    def setCameraViews(self, cameraViews):
+        self.cameraViews = cameraViews
+
+class CameraFrame():
     def __init__(self, frame):
         self.frame = frame
-        self.personID = list()
-        self.positionID = list()
-        self.views = list()
+        self.overallDetections = list()
 
     def __str__(self):
         outputString = ""
-        for index in range(len(self.personID)):
-            outputString = outputString + "\n\nPerson ID: {}\nPosition ID: {}\nViews:\n{}".format(self.personID[index], self.positionID[index], self.views[index])
+        for detectionIndex in range(len(self.overallDetections)):
+            outputString = outputString + "\n{}\n".format(self.overallDetections[detectionIndex])
         return outputString
 
     def getDetections(self):
         with open(self.frame) as f:
             overallData = json.load(f)
-            for person in overallData:
-                self.personID.append(person["personID"])
-                self.positionID.append(person["positionID"])
-                for camera_view in person["views"]:
-                    camera_view["x"] = (camera_view["xmin"] + camera_view["xmax"])/2
-                    camera_view["y"] = (camera_view["ymin"] + camera_view["ymax"])/2
-                self.views.append(person["views"])
-        return self
-                
+            for individualObject in overallData:
+                currentDetection = Detections(individualObject["personID"], -1, individualObject["positionID"])
+                for individualCameraView in individualObject["views"]:
+                    individualCameraView["x"] = (individualCameraView["xmin"] + individualCameraView["xmax"])/2
+                    individualCameraView["y"] = (individualCameraView["ymin"] + individualCameraView["ymax"])/2
+                currentDetection.setCameraViews(individualObject["views"])
+                self.overallDetections.append(currentDetection)
+        return self.overallDetections                
 
-def display_input(input_path, frameID):
-    camera_folders = ["C1", "C2", "C3", "C4", "C5", "C6", "C7"]
-    camera_images = list()
+def displayInputFrame(inputPath, frameID):
+    cameraFoldersName = ["C1", "C2", "C3", "C4", "C5", "C6", "C7"]
+    overallCameraImagesPath = list()
 
-    for folder_name in camera_folders:
-        current_camera_images = str(input_path) + "\\**\\" + folder_name + "\\**\\*.png"
-        current_camera_images = glob.glob(current_camera_images, recursive=True)
-        current_camera_images = sorted(current_camera_images)
-        camera_images.append(current_camera_images)
+    for individualCameraFolderName in cameraFoldersName:
+        individualCameraImagesPath = str(inputPath) + "\\**\\" + individualCameraFolderName + "\\**\\*.png"
+        individualCameraImagesPath = glob.glob(individualCameraImagesPath, recursive=True)
+        individualCameraImagesPath = sorted(individualCameraImagesPath)
+        overallCameraImagesPath.append(individualCameraImagesPath)
 
-    img_path = list()
-    for camera_index in range(len(camera_images)):
-        img_path.append(camera_images[camera_index][frameID])
+    inputImagePath = list()
+    for camerapersonIndex in range(len(cameraFoldersName)):
+        inputImagePath.append(overallCameraImagesPath[camerapersonIndex][frameID])
 
-    fig, axs = plt.subplots(3, 3)
-    img1 = mpimg.imread(img_path[0])
-    img2 = mpimg.imread(img_path[1])
-    img3 = mpimg.imread(img_path[2])
-    img4 = mpimg.imread(img_path[3])
-    img5 = mpimg.imread(img_path[4])
-    img6 = mpimg.imread(img_path[5])
-    img7 = mpimg.imread(img_path[6])
-    axs[0, 0].imshow(img1)
-    axs[0, 1].imshow(img2)
-    axs[0, 2].imshow(img3)
-    axs[1, 1].imshow(img4)
-    axs[2, 0].imshow(img5)
-    axs[2, 1].imshow(img6)
-    axs[2, 2].imshow(img7)
+    inputImage = list()
+    for camerapersonIndex in range(len(cameraFoldersName)):
+        inputImage.append(mpimg.imread(inputImagePath[camerapersonIndex]))
+    
+    #TODO: Improve This Code
+    _, axs = plt.subplots(3, 3, figsize=(8,8))
+    axs[0, 0].imshow(inputImage[0])
+    axs[0, 1].imshow(inputImage[1])
+    axs[0, 2].imshow(inputImage[2])
+    axs[1, 1].imshow(inputImage[3])
+    axs[2, 0].imshow(inputImage[4])
+    axs[2, 1].imshow(inputImage[5])
+    axs[2, 2].imshow(inputImage[6])
     plt.show(block=False)
     plt.pause(1)
     plt.close()
 
-def object_detection(input_path, frameID):
+def objectDetection(inputPath, frameID):
 
-    annotation_positions = str(input_path) + "\\**\\annotations_positions\\**\\*.json"
-    annotation_positions = glob.glob(annotation_positions, recursive=True)
-    annotation_positions = sorted(annotation_positions)
+    annotationPositionsPath = str(inputPath) + "\\**\\annotations_positions\\**\\*.json"
+    annotationPositionsPath = glob.glob(annotationPositionsPath, recursive=True)
+    annotationPositionsPath = sorted(annotationPositionsPath)
 
-    obj = detectedObject(annotation_positions[frameID])
-    detections = obj.getDetections()
+    individualFrame = CameraFrame(annotationPositionsPath[frameID])
+    individualFrameDetections = individualFrame.getDetections()
 
-    return detections
-    
+    #print(individualFrameDetections)
 
+    return individualFrameDetections
