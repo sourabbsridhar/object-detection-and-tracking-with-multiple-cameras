@@ -6,7 +6,7 @@ from pathlib import Path
 import code.object_detection as objDet
 import code.pose_estimation as poseEst
 import code.project_2d_position as proj2dPos
-import code.fuse_2d_position as fusePos
+import code.fuse_3d_position as fusePos
 
 def evaluateArguments(inputPath, detectionWeightsPath, trackingWeightsPath, cameraParametersPath, outputPath, verbose):
 
