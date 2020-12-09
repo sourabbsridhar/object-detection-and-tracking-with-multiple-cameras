@@ -2,73 +2,6 @@ import numpy as np
 from copy import deepcopy
 
 
-class Projection:
-    def __init__(self, position, velocity, detection_index, camera_index):
-        self.position = position
-        self.velocity = velocity
-        self.detection_index = detection_index
-        self.camera_index = camera_index
-
-    def __str__(self):
-        return 'p: {}\tv: {}\tDetection: {}\tCamera: {}'.format(self.position, self.velocity, self.detection_index, self.camera_index)
-
-    def __eq__(self, other):
-        if type(other) != Projection:
-            return False
-        elif self.detection_index == other.detection_index and self.camera_index == other.camera_index:
-            return True
-        return False
-
-    def get_position(self):
-        return self.position
-
-    def get_velocity(self):
-        return self.velocity
-
-
-class Cluster:
-    def __init__(self, index):
-        self.projections = list()
-        self.index = index
-        self.position_average = None
-        self.velocity_average = None
-
-    def __eq__(self, other):
-        if type(other) != Cluster:
-            return False
-        elif self.index != other.index:
-            return False
-        return True
-
-    def add_projection(self, projection):
-        self.projections.append(projection)
-        self.update_averages()
-
-    def validate_cluster(self, R, V):
-        # Make sure projection isn't farther than R/2 and V/2 away from the average and that no
-        for projection in self.projections:
-            if np.linalg.norm(projection.get_position() - self.get_position()) > R/2 or \
-                    np.linalg.norm(projection.get_velocity() - self.get_velocity()) > V/2:
-                return False
-
-        # Make sure no there are no projections from the same camera
-        camera_list = [projection.camera_index for projection in self.projections]
-        if len(camera_list) > len(set(camera_list)):
-            return False
-
-        return True
-
-    def update_averages(self):
-        self.position_average = np.mean([projection.position for projection in self.projections], axis=0)
-        self.velocity_average = np.mean([projection.velocity for projection in self.projections], axis=0)
-
-    def get_position(self):
-        return self.position_average
-
-    def get_velocity(self):
-        return self.velocity_average
-
-
 def objective_function(projection1, projection2, R, V):
     position_distance = np.linalg.norm(projection1.get_position() - projection2.get_position())
     velocity_distance = np.linalg.norm(projection1.get_velocity() - projection2.get_velocity())
@@ -200,6 +133,7 @@ class OutputObject():
         self.position = position
         self.velocity = velocity
 
+
 def output_object_tracking(output_objects, clusters, deltaTime):
 
     # Define model
@@ -213,7 +147,6 @@ def output_object_tracking(output_objects, clusters, deltaTime):
     predictedStateCov = list()
     for object in output_objects:
         predictedStates.append(np.dot(F, object.get_state()))
-
 
 
 if __name__ == '__main__':
@@ -242,7 +175,6 @@ if __name__ == '__main__':
     # Perform Kalman Tracking
     output_objects = list()
     output_objects = output_object_tracking(output_objects, clusters, 0.1)
-
 
     # Print if any clusters are larger than 2
     for cluster in clusters:

@@ -2,8 +2,37 @@
 
 import cv2
 import numpy as np
-
 from . import object_detection
+from . import Handover_Fusion
+from . import Simulation
+
+def projections(imagePoints, cameras, groundHeight):
+    projections = list()
+
+    for imagePoint in imagePoints:
+        camera = next((camera for camera in cameras if camera.id == imagePoint.camera_id), None)
+
+        if camera is None:
+            raise Exception('There is no camera found for image point camera id')
+
+        # Homogenous coordinates
+        position2dHomogenous = np.vstack(imagePoint.position, 1)
+        velocity2dHomogenous = np.vstack(imagePoint.velocity, 1)
+
+        P_tilde = np.matmul(np.linalg.inv(camera.K), position2dHomogenous)
+        V_tilde = np.matmul(np.linalg.inv(camera.K), position2dHomogenous)
+
+        l = (groundHeight - np.matmul(camera.R[:, 3].T, camera.t)) / np.matmul(camera.R[:, 3].T, P_tilde)
+
+        P_bar = P_tilde * l
+        V_bar = V_tilde * l
+
+        p_bar = pflat(P_bar)[0:1]
+        v_bar = pflat(V_bar)[0:1]
+
+        projection = Projection(imagePoint.detection_id, imagePoint.camera_id, imagePont.detection_class, p_bar, v_bar)
+        projections.append(projection)
+
 
 def project2dPosition(detections2dPosition, estimatedPose):
 
@@ -23,7 +52,7 @@ def project2dPosition(detections2dPosition, estimatedPose):
             currentCameraMatrix = estimatedPose[cameraIndex]
 
             projected3dHomogenous = np.matmul(np.linalg.pinv(currentCameraMatrix), position2dHomogenous)
-            projected3dHomogenous = projected3dHomogenous/projected3dHomogenous[3,0]
+            projected3dHomogenous = projected3dHomogenous/projected3dHomogenous[3, 0]
             projected3dHomogenous = projected3dHomogenous[0:3]
 
             #print("x = ", str(x))
