@@ -1,6 +1,6 @@
 import numpy as np
 from copy import deepcopy
-
+from Handover_Library import Cluster, Projection
 
 def objective_function(projection1, projection2, R, V):
     position_distance = np.linalg.norm(projection1.get_position() - projection2.get_position())
@@ -128,25 +128,6 @@ def fusion(projections, R, V):
     return clusters
 
 
-class OutputObject():
-    def __init__(self, position, velocity):
-        self.position = position
-        self.velocity = velocity
-
-
-def output_object_tracking(output_objects, clusters, deltaTime):
-
-    # Define model
-    F = np.array([[1, 0, deltaTime, 0], [0, 1, 0, deltaTime], [0, 0, 1, 0], [0, 0, 0, 1]]) # Process model
-    Q_bar = 1 # Process noise magnitude
-    Q = np.array([[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]) # Process noise
-
-
-    # Kalman prediction of output_object states
-    predictedStates = list()
-    predictedStateCov = list()
-    for object in output_objects:
-        predictedStates.append(np.dot(F, object.get_state()))
 
 
 if __name__ == '__main__':

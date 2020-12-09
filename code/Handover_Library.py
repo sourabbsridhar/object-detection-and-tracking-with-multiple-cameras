@@ -57,8 +57,8 @@ class ImagePoint:
 
 class Projection:
     def __init__(self, detection_id, camera_id, detection_class, position, velocity):
-        self.detection_index = detection_index
-        self.camera_index = camera_index
+        self.detection_index = detection_id
+        self.camera_index = camera_id
         self.detection_class = detection_class
         self.position = position
         self.velocity = velocity
@@ -122,3 +122,8 @@ class Cluster:
     def get_velocity(self):
         return self.velocity_average
 
+
+class OutputObject():
+    def __init__(self, position, velocity):
+        self.position = position
+        self.velocity = velocity

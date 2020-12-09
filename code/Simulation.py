@@ -3,7 +3,9 @@ import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as p3
 import matplotlib.animation as animation
 import copy
-from . import Handover_Library
+from Handover_Library import Camera, ImagePoint
+from Handover_Fusion import fusion
+from project_2d_position import ground_projections
 
 
 class ScenePoint:
@@ -39,7 +41,7 @@ def simulate_data(cameras, scenePoints, nrFrames, deltaTime):
         for scenePoint in scenePoints:
             for camera in cameras:
                 projection, isVisible = camera.project(scenePoint)
-                imagePoints.append(ImagePoint(scenePoint.id, camera.id, isVisible, projection))
+                imagePoints.append(ImagePoint(scenePoint.id, camera.id, 0, projection, isVisible=isVisible))
 
         # If this isn't the first time instance, estimate the image point velocity
         if iTime is not 0:
@@ -87,7 +89,7 @@ def simulation_scenario(scenario_number):
         scenePoints = list()
         scenePoints.append(ScenePoint(id=len(scenePoints), position=[3, 3, 0], velocity=[-1, 0, 0]))
         scenePoints.append(ScenePoint(id=len(scenePoints), position=[-3, -3, 0], velocity=[1, 0, 0]))
-        scenePoints.append(ScenePoint(id=len(scenePoints), position=[-2, 4, 0.5], velocity=[0.4, -1, 0]))
+        scenePoints.append(ScenePoint(id=len(scenePoints), position=[0, 0, 0.5], velocity=[0.4, -1, 0]))
         nrPoints = len(scenePoints)
 
         return simulate_data(cameras, scenePoints, nrFrames, deltaTime)
@@ -99,13 +101,19 @@ def simulation_scenario(scenario_number):
 # Get simulation data
 simulationData = simulation_scenario(1)
 
+# Parameters
+# Fusion
+R = 1
+V = 1
+
 # Handover Loop
 for iTime in range(simulationData['Nr Frames']):
 
-    # Get image points for current time instance
-    imagePoints = simulationData['Frame Data'][iTime]['Image Points']
-
-    # Projection onto a ground plane
+    # Perform Handover
+    imagePoints = [imagePoint for imagePoint in simulationData['Frame Data'][iTime]['Image Points'] if imagePoint.isVisible]
+    projections = ground_projections(imagePoints, simulationData['Cameras'], 0)
+    clusters = fusion(projections, R, V)
+    # output_objects =
 
 
 
