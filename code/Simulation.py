@@ -5,6 +5,7 @@ import matplotlib.animation as animation
 import copy
 from Handover_Library import Camera, ImagePoint
 from Handover_Fusion import fusion
+from Handover_Tracking import output_object_tracking
 from project_2d_position import ground_projections
 
 
@@ -67,7 +68,6 @@ def simulate_data(cameras, scenePoints, nrFrames, deltaTime):
 def simulation_scenario(scenario_number):
 
     if scenario_number is 1:
-
         # Parameters
         nrFrames = 100
         deltaTime = 0.1
@@ -75,20 +75,20 @@ def simulation_scenario(scenario_number):
         # Define cameras
         cameras = list()
         cameras.append(Camera(id=len(cameras), R=[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
-                              t=[[0, 0, 2]],
+                              t=[[0, 0, 4]],
                               K=[[400, 0, 960], [0, 400, 540], [0, 0, 1]]))
         cameras.append(Camera(id=len(cameras), R=[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
-                              t=[[6, 0, 2]],
+                              t=[[6, 2, 4]],
                               K=[[400, 0, 960], [0, 400, 540], [0, 0, 1]]))
         cameras.append(Camera(id=len(cameras), R=[[1, 0, 0], [0, -1, 0], [0, 0, -1]],
-                              t=[[-4, -2, 2]],
+                              t=[[-4, -2, 4]],
                               K=[[400, 0, 960], [0, 400, 540], [0, 0, 1]]))
         nrCameras = len(cameras)
 
         # Define scene points
         scenePoints = list()
-        scenePoints.append(ScenePoint(id=len(scenePoints), position=[3, 3, 0], velocity=[-1, 0, 0]))
-        scenePoints.append(ScenePoint(id=len(scenePoints), position=[-3, -3, 0], velocity=[1, 0, 0]))
+        scenePoints.append(ScenePoint(id=len(scenePoints), position=[3, 3, 1], velocity=[-1, 0, 0]))
+        scenePoints.append(ScenePoint(id=len(scenePoints), position=[-3, -3, 1.4], velocity=[1, 0, 0]))
         scenePoints.append(ScenePoint(id=len(scenePoints), position=[0, 0, 0.5], velocity=[0.4, -1, 0]))
         nrPoints = len(scenePoints)
 
@@ -101,31 +101,36 @@ def simulation_scenario(scenario_number):
 # Get simulation data
 simulationData = simulation_scenario(1)
 
-# Parameters
-# Fusion
-R = 1
-V = 1
+# Fusion Parameters
+R = 2
+V = 10
+
+# Tracking parameters
+deltaTime = 0.1
+distance_maximum = 5
+observation_loss_maximum = 3
+observation_new_minimum = 3
 
 # Handover Loop
+output_objects = list()
+handover_simulation_data = list()
 for iTime in range(simulationData['Nr Frames']):
 
     # Perform Handover
     imagePoints = [imagePoint for imagePoint in simulationData['Frame Data'][iTime]['Image Points'] if imagePoint.isVisible]
     projections = ground_projections(imagePoints, simulationData['Cameras'], 0)
     clusters = fusion(projections, R, V)
-    # output_objects =
+    output_objects = output_object_tracking(output_objects, clusters, deltaTime, distance_maximum, observation_loss_maximum, observation_new_minimum)
+    validated_output_objects = [obj for obj in output_objects if obj.isValid]
 
 
-
-# Detection
-# Tracking
-
-#data = Simulation.get_data(nrFrames)
-# GT, each time step:  Camera frame: [detection = [camera views,id,...]]
-
-# Fusion
-# Kalman
-# Reprojection
+    # Save frame data and append to handover simulation data
+    frame_data = dict()
+    frame_data['Projections'] = copy.deepcopy(projections)
+    frame_data['Clusters'] = copy.deepcopy(clusters)
+    frame_data['Output Objects'] = copy.deepcopy(output_objects)
+    frame_data['Valid Output Objects'] = copy.deepcopy(validated_output_objects)
+    handover_simulation_data.append(frame_data)
 
 
 # ---------- Animations ----------
@@ -175,6 +180,51 @@ for iCam in range(len(simulationData['Cameras'])):
 
 # Start animation
 ani2 = animation.FuncAnimation(fig2, animate_image_points, simulationData['Nr Frames'], fargs=(simulationData, scatters), interval=50, blit=False, repeat=True)
+
+
+# Animation: Handover points
+def animate_handover_points(iteration, sim_data, handover_sim_data, scatters):
+    if len(sim_data['Frame Data'][iteration]['Scene Points']) > 0:
+        scatters[0]._offsets = np.vstack([sp.velocity[0:2].T for sp in sim_data['Frame Data'][iteration]['Scene Points']])
+    if len(handover_sim_data[iteration]['Projections']) > 0:
+        scatters[1]._offsets = np.vstack([pr.velocity.T for pr in handover_sim_data[iteration]['Projections']])
+    if len(handover_sim_data[iteration]['Clusters']) > 0:
+        scatters[2]._offsets = np.vstack([cl.get_velocity().T for cl in handover_sim_data[iteration]['Clusters']])
+    if len(handover_sim_data[iteration]['Valid Output Objects']) > 0:
+        scatters[3]._offsets = np.vstack([ob.velocity.T for ob in handover_sim_data[iteration]['Valid Output Objects']])
+
+
+# Initialize plot
+fig3 = plt.figure()
+ax3 = fig3.add_axes([0,0,1,1])
+ax3.set_xlim((-15, 15))
+ax3.set_ylim((-15, 15))
+
+# Initialize scatters for scene points, projections, clusters and objects
+scatters = list()
+scatters.append(ax3.scatter([sp.velocity[0] for sp in simulationData['Frame Data'][0]['Scene Points']],
+                            [sp.velocity[1] for sp in simulationData['Frame Data'][1]['Scene Points']],
+                            color='k', alpha=0.8))
+scatters.append(ax3.scatter([pr.velocity[0] for pr in handover_simulation_data[0]['Projections']],
+                            [pr.velocity[1] for pr in handover_simulation_data[0]['Projections']],
+                            marker='x', alpha=1))
+scatters.append(ax3.scatter([cl.get_velocity()[0] for cl in handover_simulation_data[0]['Clusters']],
+                            [cl.get_velocity()[1] for cl in handover_simulation_data[0]['Clusters']],
+                            marker='o', alpha=1, s=100, facecolors='none', edgecolor='orange'))
+scatters.append(ax3.scatter([ob.velocity[0] for ob in handover_simulation_data[0]['Valid Output Objects']],
+                            [ob.velocity[1] for ob in handover_simulation_data[0]['Valid Output Objects']],
+                            alpha=1))
+
+ax3.legend(['Scene Points', 'Projections', 'Clusters', 'Valid Objects'])
+
+# Start animation
+ani3 = animation.FuncAnimation(fig3, animate_handover_points, simulationData['Nr Frames'], fargs=(simulationData, handover_simulation_data, scatters), interval=50, blit=False, repeat=True)
+
+# writervideo = animation.FFMpegWriter(fps=15)
+# ani3.save('Velocities.mp4', writer=writervideo)
+
+
+
 
 plt.show()
 

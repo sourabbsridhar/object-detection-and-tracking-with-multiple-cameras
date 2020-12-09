@@ -122,8 +122,22 @@ class Cluster:
     def get_velocity(self):
         return self.velocity_average
 
+    def get_state(self):
+        return np.vstack((self.position_average, self.velocity_average))
 
-class OutputObject():
+
+class OutputObject:
     def __init__(self, position, velocity):
         self.position = position
         self.velocity = velocity
+        self.estimate_covariance = np.zeros((4, 4))
+        self.observation_loss_count = 0
+        self.observation_new_count = 1
+        self.isValid = False
+
+    def get_state(self):
+        return np.vstack((self.position, self.velocity))
+
+    def set_state(self, state):
+        self.position = state[0:2]
+        self.velocity = state[2:4]
