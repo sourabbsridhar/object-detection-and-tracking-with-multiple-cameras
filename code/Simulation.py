@@ -74,7 +74,7 @@ def simulation_scenario(scenario_number):
 
     if scenario_number is 1:
         # Parameters
-        nrFrames = 100
+        nrFrames = 200
         deltaTime = 0.1
 
         # Define cameras

@@ -17,10 +17,10 @@ def ground_projections(imagePoints, cameras, groundHeight, deltaTime):
             raise Exception('There is no camera found for image point camera id')
 
         # Calculate current ground position
-        position2dHomogenous = np.vstack((imagePoint.position, 1))
-        P_tilde = np.matmul(np.linalg.inv(camera.K), position2dHomogenous)
-        l = (np.matmul(camera.R[:, 2].T, camera.t) - groundHeight) / np.matmul(camera.R[:, 2].T, P_tilde)
-        P_bar = P_tilde * l
+        p_tilde = np.vstack((imagePoint.position, 1))
+        P_tilde = np.matmul(np.linalg.inv(camera.K), p_tilde)
+        lamb = (groundHeight + np.matmul(camera.R[:, 2].T, camera.t)) / np.matmul(camera.R[:, 2].T, P_tilde)
+        P_bar = P_tilde * lamb
         P_bar_global = np.matmul(camera.R.T, P_bar - camera.t)
         p_bar = P_bar_global[0:2]
 
@@ -28,15 +28,14 @@ def ground_projections(imagePoints, cameras, groundHeight, deltaTime):
         # calculate the estimated projected velocity, otherwise the velocity will be zero
         v_bar = np.zeros((2, 1))
         if imagePoint.prev_position is not None:
-            position2dHomogenous = np.vstack((imagePoint.prev_position, 1))
-            P_tilde = np.matmul(np.linalg.inv(camera.K), position2dHomogenous)
-            l = (np.matmul(camera.R[:, 2].T, camera.t) - groundHeight) / np.matmul(camera.R[:, 2].T, P_tilde)
-            P_bar = P_tilde * l
+            p_tilde = np.vstack((imagePoint.prev_position, 1))
+            P_tilde = np.matmul(np.linalg.inv(camera.K), p_tilde)
+            lamb = (groundHeight + np.matmul(camera.R[:, 2].T, camera.t)) / np.matmul(camera.R[:, 2].T, P_tilde)
+            P_bar = P_tilde * lamb
             P_bar_global = np.matmul(camera.R.T, P_bar - camera.t)
             prev_p_bar = P_bar_global[0:2]
 
             v_bar = (p_bar - prev_p_bar) / deltaTime
-
 
         projection = Projection(imagePoint.detection_id, imagePoint.camera_id, imagePoint.detection_class, p_bar, v_bar)
         projections.append(projection)
