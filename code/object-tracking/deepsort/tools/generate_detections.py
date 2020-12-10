@@ -51,15 +51,12 @@ def extract_image_patch(image, bbox, patch_shape):
     bbox = np.array(bbox)
     if patch_shape is not None:
         # correct aspect ratio to patch shape
-        w = bbox[2] - bbox[0]
-        h = bbox[3] - bbox[1]
         target_aspect = float(patch_shape[1]) / patch_shape[0]
-        new_width = target_aspect * h # bbox[3] = height acording to original code
-        bbox[0] -= (new_width - w) / 2
+        new_width = target_aspect * bbox[3]
+        bbox[0] -= (new_width - bbox[2]) / 2
         bbox[2] = new_width
-        bbox[3] = h # In order to work for stanford dataset
 
-    # convert to top left, bottom right, in stanford this is already true
+    # convert to top left, bottom right
     bbox[2:] += bbox[:2]
     bbox = bbox.astype(np.int)
 
@@ -67,10 +64,7 @@ def extract_image_patch(image, bbox, patch_shape):
     bbox[:2] = np.maximum(0, bbox[:2])
     bbox[2:] = np.minimum(np.asarray(image.shape[:2][::-1]) - 1, bbox[2:])
     if np.any(bbox[:2] >= bbox[2:]):
-        print("HAS NEGATIVE BBOX:")
-        print(bbox)
         return None
-    bbox = bbox.astype(np.int)
     sx, sy, ex, ey = bbox
     image = image[sy:ey, sx:ex]
     image = cv2.resize(image, tuple(patch_shape[::-1]))
@@ -161,7 +155,7 @@ def generate_detections(encoder, mot_dir, output_dir, detection_dir=None):
         sequence_dir = os.path.join(mot_dir, sequence)
 
 
-        image_dir = os.path.join(sequence_dir, "frames")
+        image_dir = os.path.join(sequence_dir, "img1")
 
         #print(image_dir)
         #print(os.listdir(image_dir))

@@ -47,9 +47,9 @@ for path in PATH_in_all:
             lines = line.split(' ') 
             
             # Add noise - Skip some lines
-            PERCENTAGE_NOISE = 0.1
-            if random() < PERCENTAGE_NOISE:
-                continue
+            #PERCENTAGE_NOISE = 0.1
+            #if random() < PERCENTAGE_NOISE:
+            #    continue
                 
             
             # Skip if no bounding box
@@ -57,9 +57,9 @@ for path in PATH_in_all:
             #    continue
 
             # Check if line/object is not occluded
-            if int(lines[7]) == 1:
-                # if line occluded skip the row, ocluded detections are ignored
-                continue
+            #if int(lines[7]) == 1:
+            #    # if line occluded skip the row, ocluded detections are ignored
+            #    continue
 
             
             # Define all annotation parameters
@@ -79,8 +79,9 @@ for path in PATH_in_all:
             obj = obj.split('"')[1] # Remove "" and \n 
 
             # Change the output to correct format and give labels a number
-            output.append([frame, -1, xmin, ymin, xmax, ymax, np.max(0.5, random()), name_dict[obj], 1, -1]) # Random since confidence is different
-
+            
+            output.append([frame, ID, xmin, ymin, int(xmax)-int(xmin), int(ymax)-int(ymin), 1, name_dict[obj], 1, -1]) # Random since confidence is different
+            continue
             # Add false positives - Add some false detections
             PERCENTAGE_FP = 0.1
             if random() < PERCENTAGE_FP:
@@ -98,7 +99,7 @@ for path in PATH_in_all:
         PATH_out += path.split('/')[-3]
         PATH_out += '/'
         PATH_out += path.split('/')[-2]
-        PATH_out += '/det/'
+        PATH_out += '/gt/'
         #print(PATH_out)
         #break
 
@@ -107,7 +108,7 @@ for path in PATH_in_all:
             os.makedirs(os.path.dirname(PATH_out), exist_ok=True)
             print('Created path:', PATH_out)
         
-        PATH_out += 'det.txt'
+        PATH_out += 'gt.txt'
 
         # Write to output file    
         with open(PATH_out, "w") as fs:

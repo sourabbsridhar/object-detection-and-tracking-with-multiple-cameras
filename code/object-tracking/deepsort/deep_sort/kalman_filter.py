@@ -19,6 +19,28 @@ chi2inv95 = {
     8: 15.507,
     9: 16.919}
 
+chi2inv90 = {
+    1: 2.706,
+    2: 4.605,
+    3: 6.251,
+    4: 7.779,
+    5: 9.236,
+    6: 10.645,
+    7: 12.017,
+    8: 13.362,
+    9: 14.684}
+
+chi2inv975 = {
+    1: 5.024,
+    2: 7.378,
+    3: 9.348,
+    4: 11.143,
+    5: 12.833,
+    6: 14.449,
+    7: 16.013,
+    8: 17.535,
+    9: 19.023}
+
 
 class KalmanFilter(object):
     """
@@ -49,8 +71,11 @@ class KalmanFilter(object):
         # Motion and observation uncertainty are chosen relative to the current
         # state estimate. These weights control the amount of uncertainty in
         # the model. This is a bit hacky.
-        self._std_weight_position = 1. / 20
-        self._std_weight_velocity = 1. / 160
+        # TUNABLE
+        #####################################################
+        self._std_weight_position = 1. / 20       #1. / 20
+        self._std_weight_velocity = 1. / 160        #1. / 160
+        #####################################################
 
     def initiate(self, measurement):
         """Create track from unassociated measurement.
@@ -73,6 +98,7 @@ class KalmanFilter(object):
         mean_vel = np.zeros_like(mean_pos)
         mean = np.r_[mean_pos, mean_vel]
 
+        
         std = [
             2 * self._std_weight_position * measurement[3], # Change height affection to area-affection
             2 * self._std_weight_position * measurement[3],
@@ -82,6 +108,17 @@ class KalmanFilter(object):
             10 * self._std_weight_velocity * measurement[3],
             1e-5,
             10 * self._std_weight_velocity * measurement[3]]
+        
+        #std = [
+        #    self._std_weight_position * (measurement[3]*measurement[2]*measurement[3]), # Change height affection to area-affection
+        #    self._std_weight_position * (measurement[3]*measurement[2]*measurement[3]),
+        #    1e-2,
+        #    self._std_weight_position * (measurement[3]*measurement[2]*measurement[3]),
+        #    5 * self._std_weight_velocity * measurement[3],
+        #    5 * self._std_weight_velocity * measurement[3],
+        #    1e-5,
+        #    5 * self._std_weight_velocity * measurement[3]]
+        
         covariance = np.diag(np.square(std))
         return mean, covariance
 

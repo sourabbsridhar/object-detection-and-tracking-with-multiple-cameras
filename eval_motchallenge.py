@@ -38,6 +38,14 @@ https://motchallenge.net/
 
 Structure
 ---------
+STANFORD
+python eval_motchallenge.py ./dataset/stanford_drone/bookstore/ ./results/stanford_drone/video0/ 
+
+MOT16
+python eval_motchallenge.py ./dataset/
+
+MOT20
+
 
 Layout for ground truth data
     <GT_ROOT>/<SEQUENCE_1>/gt/gt.txt
@@ -92,7 +100,7 @@ def main():
 
     gtfiles = glob.glob(os.path.join(args.groundtruths, '*/gt/gt.txt'))
     tsfiles = [f for f in glob.glob(os.path.join(args.tests, '*.txt')) if not os.path.basename(f).startswith('eval')]
-
+    print(gtfiles)
     logging.info('Found %d groundtruths and %d test files.', len(gtfiles), len(tsfiles))
     logging.info('Available LAP solvers %s', str(mm.lap.available_solvers))
     logging.info('Default LAP solver \'%s\'', mm.lap.default_solver)
@@ -114,8 +122,10 @@ def main():
         mm.lap.default_solver = args.id_solver
     summary = mh.compute_many(accs, names=names, metrics=metrics, generate_overall=True)
     print(mm.io.render_summary(summary, formatters=mh.formatters, namemap=mm.io.motchallenge_metric_names))
+
     with open('motmetric.txt', 'w') as out_file:
         print(mm.io.render_summary(summary, formatters=mh.formatters, namemap=mm.io.motchallenge_metric_names),file=out_file)
+
     logging.info('Completed')
 
     
