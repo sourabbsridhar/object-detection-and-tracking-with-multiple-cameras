@@ -46,13 +46,13 @@ class Camera:
 
 
 class ImagePoint:
-    def __init__(self, detection_id, camera_id, detection_class, position, velocity=np.zeros((2, 1)), isVisible=True):
+    def __init__(self, detection_id, camera_id, detection_class, position):
         self.detection_id = detection_id
         self.camera_id = camera_id
         self.detection_class = detection_class
         self.position = position
-        self.velocity = velocity
-        self.isVisible = isVisible
+        self.prev_position = None
+        self.velocity = None
 
 
 class Projection:

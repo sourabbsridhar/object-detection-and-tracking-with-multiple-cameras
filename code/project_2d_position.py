@@ -7,8 +7,45 @@ import numpy as np
 #from . import Simulation
 from Handover_Library import Projection, pflat
 
-def ground_projections(imagePoints, cameras, groundHeight):
+def ground_projections(imagePoints, cameras, groundHeight, deltaTime):
 
+    projections = list()
+    for imagePoint in imagePoints:
+        camera = next((camera for camera in cameras if camera.id == imagePoint.camera_id), None)
+
+        if camera is None:
+            raise Exception('There is no camera found for image point camera id')
+
+        # Calculate current ground position
+        position2dHomogenous = np.vstack((imagePoint.position, 1))
+        P_tilde = np.matmul(np.linalg.inv(camera.K), position2dHomogenous)
+        l = (np.matmul(camera.R[:, 2].T, camera.t) - groundHeight) / np.matmul(camera.R[:, 2].T, P_tilde)
+        P_bar = P_tilde * l
+        P_bar_global = np.matmul(camera.R.T, P_bar - camera.t)
+        p_bar = P_bar_global[0:2]
+
+        # If there is a previous image point position available, calculate its projection position and use it to
+        # calculate the estimated projected velocity, otherwise the velocity will be zero
+        v_bar = np.zeros((2, 1))
+        if imagePoint.prev_position is not None:
+            position2dHomogenous = np.vstack((imagePoint.prev_position, 1))
+            P_tilde = np.matmul(np.linalg.inv(camera.K), position2dHomogenous)
+            l = (np.matmul(camera.R[:, 2].T, camera.t) - groundHeight) / np.matmul(camera.R[:, 2].T, P_tilde)
+            P_bar = P_tilde * l
+            P_bar_global = np.matmul(camera.R.T, P_bar - camera.t)
+            prev_p_bar = P_bar_global[0:2]
+
+            v_bar = (p_bar - prev_p_bar) / deltaTime
+
+
+        projection = Projection(imagePoint.detection_id, imagePoint.camera_id, imagePoint.detection_class, p_bar, v_bar)
+        projections.append(projection)
+
+    return projections
+
+
+    # Ground projection which calculated ground velocity from image point velocity
+    '''
     projections = list()
     for imagePoint in imagePoints:
         camera = next((camera for camera in cameras if camera.id == imagePoint.camera_id), None)
@@ -39,6 +76,7 @@ def ground_projections(imagePoints, cameras, groundHeight):
         projections.append(projection)
 
     return projections
+    '''
 
 '''
 def project2dPosition(detections2dPosition, estimatedPose):

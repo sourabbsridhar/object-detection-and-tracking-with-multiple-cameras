@@ -19,23 +19,35 @@ def output_object_tracking(output_objects, clusters, deltaTime, distance_maximum
         predicted_state_cov.append(F.dot(object.estimate_covariance).dot(F.T) + Q)
 
     # Calculate squared Mahalanobis distance from every cluster to every object prediction
-    distances = np.empty((len(clusters), len(output_objects)))
+    distances = np.zeros((len(clusters), len(output_objects)))
     for iObject, object in enumerate(output_objects):
         for iCluster, cluster in enumerate(clusters):
-            distances[iCluster, iObject] = (object.get_state() - cluster.get_state()).T.dot(object.estimate_covariance).dot(object.get_state() - cluster.get_state())
+            objState = object.get_state()
+            clusterState = cluster.get_state()
+            error = (objState - clusterState)
+            distance = (error.T).dot(predicted_state_cov[iObject]).dot(error)
+            distances[iCluster, iObject] = distance
 
     # Match clusters to objects if Mahalanobis distance is mutual minimum and under a maximum distance
     matches = list()
     change = True
-    while change:
+    while change and not np.all(np.isnan(distances)):
         change = False
         for iObject in range(len(output_objects)):
-            bestClusterArg = np.argmin(distances[:, iObject])
-            if distances[bestClusterArg, iObject] < distance_maximum and iObject == np.argmin(distances[bestClusterArg, :]):
+
+            if not np.all(np.isnan(distances[:, iObject])):
+                bestClusterArg = np.nanargmin(distances[:, iObject])
+            else:
+                continue
+
+            if distances[bestClusterArg, iObject] < distance_maximum and iObject == np.nanargmin(distances[bestClusterArg, :]):
                 matches.append([bestClusterArg, iObject])
                 distances[:, iObject] = None
                 distances[bestClusterArg, :] = None
                 change = True
+                if np.all(np.isnan(distances)):
+                    break
+
 
     # For every object matched with a cluster, perform Kalman update using cluster as an observation and add to next
     # output object list. Also, if object is not validated, increase new observation count by 1 and check if valid
