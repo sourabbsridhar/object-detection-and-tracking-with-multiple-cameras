@@ -1,7 +1,7 @@
 import numpy as np
 from Handover_Library import OutputObject
 
-def output_object_tracking(output_objects, clusters, deltaTime, distance_maximum, observation_loss_maximum, observation_new_minimum):
+def output_object_tracking(output_objects, clusters, output_objectCount, deltaTime, distance_maximum, observation_loss_maximum, observation_new_minimum):
 
     next_output_objects = list()
 
@@ -9,7 +9,7 @@ def output_object_tracking(output_objects, clusters, deltaTime, distance_maximum
     F = np.array([[1, 0, deltaTime, 0], [0, 1, 0, deltaTime], [0, 0, 1, 0], [0, 0, 0, 1]])  # Process model
     Q = np.diag([0, 0, 1, 1]) * 1  # Process noise covariance
     H = np.identity(4)  # Observation model
-    R = np.diag([1, 1, 1, 1])  # Observation noise covariance
+    R = np.diag([1, 1, 1, 1]) * 10  # Observation noise covariance
 
     # Kalman prediction of output_object states
     predicted_states = list()
@@ -47,7 +47,6 @@ def output_object_tracking(output_objects, clusters, deltaTime, distance_maximum
                 change = True
                 if np.all(np.isnan(distances)):
                     break
-
 
     # For every object matched with a cluster, perform Kalman update using cluster as an observation and add to next
     # output object list. Also, if object is not validated, increase new observation count by 1 and check if valid
@@ -88,6 +87,7 @@ def output_object_tracking(output_objects, clusters, deltaTime, distance_maximum
 
     # For every cluster that has not been matched, create a new object
     for iCluster in [i for i in range(len(clusters)) if i not in [match[0] for match in matches]]:
-        next_output_objects.append(OutputObject(clusters[iCluster].get_position(), clusters[iCluster].get_velocity()))
+        next_output_objects.append(OutputObject('{}'.format(output_objectCount), clusters[iCluster].get_position(), clusters[iCluster].get_velocity()))
+        output_objectCount += 1
 
-    return next_output_objects
+    return (next_output_objects, output_objectCount)

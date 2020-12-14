@@ -127,7 +127,8 @@ class Cluster:
 
 
 class OutputObject:
-    def __init__(self, position, velocity):
+    def __init__(self, id, position, velocity):
+        self.id = id
         self.position = position
         self.velocity = velocity
         self.estimate_covariance = np.zeros((4, 4))
