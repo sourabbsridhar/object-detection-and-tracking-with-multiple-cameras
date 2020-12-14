@@ -55,6 +55,7 @@ def main(_argv):
 
     # initiate opticalflow
     optical = OpticalFlow(0, 0, [0,0,0,0], 'person') # OpticalFlow(frame, id, bbox, class_name, fps)
+    results = []
 
     # load configuration for object detector
     config = ConfigProto()
@@ -221,12 +222,14 @@ def main(_argv):
         # if enable info flag then print details about each track
             if FLAGS.info:
                 print("Tracker ID: {}, Class: {},  BBox Coords (xmin, ymin, xmax, ymax): {}".format(str(track.track_id), class_name, (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))))
-
+                results.append([frame_num, track.track_id, int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]), 1, -1, -1, -1])
 
             # Call the optical flow 
             bbox = track.to_tlwh() # In order for optical flow calculations to be correct
             state = optical(frame_num, track.track_id, bbox, class_name) # in: frame, id_b, BBOX 
-        
+
+            if frame_num == 100:
+                break
 
         # calculate frames per second of running detections
         fps = 1.0 / (time.time() - start_time)
@@ -242,6 +245,12 @@ def main(_argv):
             out.write(result)
         if cv2.waitKey(1) & 0xFF == ord('q'): break
     cv2.destroyAllWindows()
+
+    with open('object_tracking_result.txt', 'w') as f:
+        for line in results:
+            print('%d,%d,%.2f,%.2f,%.2f,%.2f,1,-1,-1,-1' % (
+            row[0], row[1], row[2], row[3], row[4], row[5]),file=f)
+
 
 if __name__ == '__main__':
     try:
