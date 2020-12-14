@@ -74,7 +74,7 @@ def simulation_scenario(scenario_number):
 
     if scenario_number is 1:
         # Parameters
-        nrFrames = 200
+        nrFrames = 300
         deltaTime = 0.1
 
         # Define cameras
@@ -95,9 +95,10 @@ def simulation_scenario(scenario_number):
 
         # Define scene points
         scenePoints = list()
-        scenePoints.append(ScenePoint(id=len(scenePoints), position=[3, 3, 1.5], velocity=[-0.5, -0.5, 0]))
-        scenePoints.append(ScenePoint(id=len(scenePoints), position=[4, -4, 0.5], velocity=[-0.6, 0.6, 0]))
-        scenePoints.append(ScenePoint(id=len(scenePoints), position=[-10, 0, 1], velocity=[1, 0, 0]))
+        scenePoints.append(ScenePoint(id=len(scenePoints), position=[3, 3, 1.5], velocity=[-0.5, -0.5, 0], acceleration_std=0.1))
+        scenePoints.append(ScenePoint(id=len(scenePoints), position=[4, -4, 0.5], velocity=[-0.6, 0.6, 0], acceleration_std=0.2))
+        scenePoints.append(ScenePoint(id=len(scenePoints), position=[-10, 0, 1], velocity=[1, 0, 0], acceleration_std=0.3))
+        scenePoints.append(ScenePoint(id=len(scenePoints), position=[2, -10, 1], velocity=[0.1, 0.7, 0], acceleration_std=0.2))
 
         return simulate_data(cameras, scenePoints, nrFrames, deltaTime)
 
@@ -251,8 +252,8 @@ ax3[1].legend(['True Points', 'Projections', 'Clusters', 'Validated Objects'])
 # Start animation
 ani3 = animation.FuncAnimation(fig3, animate_handover_points, simulationData['Nr Frames'], fargs=(simulationData, handover_simulation_data, scatters), interval=50, blit=False, repeat=True)
 
-#writervideo = animation.FFMpegWriter(fps=15)
-#ani3.save('Handover_Simulation.mp4', writer=writervideo)
+writervideo = animation.FFMpegWriter(fps=15)
+ani3.save('Handover_Simulation.mp4', writer=writervideo)
 
 plt.show()
 
