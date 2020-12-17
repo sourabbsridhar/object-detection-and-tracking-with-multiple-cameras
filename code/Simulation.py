@@ -149,7 +149,7 @@ def simulation_scenario(scenario_number):
 
     elif scenario_number is 3:
         # Parameters
-        nrFrames = 400
+        nrFrames = 300
         deltaTime = 0.1
 
         # Define cameras
@@ -170,7 +170,7 @@ def simulation_scenario(scenario_number):
 
         # Define scene points
         scenePoints = list()
-        nrScenePoints = 25
+        nrScenePoints = 30
         for i in range(nrScenePoints):
             height = np.max(np.random.normal(1.8, 0.4), 0) / 2
             center_distance = np.random.normal(15, 2)
@@ -290,7 +290,7 @@ plt.show()
 plot_3D_space = True
 plot_camera_views = False
 plot_projective_space = True
-export_video = False
+export_video = True
 
 
 # Animation: 3D window
