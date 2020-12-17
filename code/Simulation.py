@@ -147,12 +147,55 @@ def simulation_scenario(scenario_number):
 
         return simulate_data(cameras, scenePoints, nrFrames, deltaTime)
 
+    elif scenario_number is 3:
+        # Parameters
+        nrFrames = 400
+        deltaTime = 0.1
+
+        # Define cameras
+        cameras = list()
+        cameras.append(Camera(id=len(cameras), R=[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
+                              t=[[0, 0, 4]],
+                              K=[[400, 0, 960], [0, 400, 540], [0, 0, 1]]))
+        cameras.append(Camera(id=len(cameras), R=[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
+                              t=[[-5, 0, 4.2]],
+                              K=[[400, 0, 960], [0, 400, 540], [0, 0, 1]]))
+        cameras.append(Camera(id=len(cameras), R=[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
+                              t=[[0, -4.5, 4]],
+                              K=[[400, 0, 960], [0, 400, 540], [0, 0, 1]]))
+        cameras.append(Camera(id=len(cameras), R=[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
+                              t=[[-5, -5, 4]],
+                              K=[[400, 0, 960], [0, 400, 540], [0, 0, 1]]))
+        nrCameras = len(cameras)
+
+        # Define scene points
+        scenePoints = list()
+        nrScenePoints = 25
+        for i in range(nrScenePoints):
+            height = np.max(np.random.normal(1.8, 0.4), 0) / 2
+            center_distance = np.random.normal(15, 2)
+            center_angle = np.random.uniform(0, 2 * np.pi)
+            center = np.array([3, 3, 0])
+            startPos = center + np.array([center_distance * np.cos(center_angle), center_distance * np.sin(center_angle), height])
+
+            veldirection = center_angle + np.pi + np.random.normal(0, 0.3)
+            speed = np.random.normal(1.2, 0.3)
+            startVel = np.array([speed*np.cos(veldirection), speed*np.sin(veldirection), 0])
+
+            accelerationSTD = np.max(np.random.normal(0.5, 0.2), 0)
+            randomPeriod = np.random.normal(0, 0.025)
+
+            scenePoints.append(ScenePoint(id=len(scenePoints), position=startPos, velocity=startVel,
+                                          acceleration_std=accelerationSTD, rotation_period=randomPeriod))
+
+        return simulate_data(cameras, scenePoints, nrFrames, deltaTime)
+
     else:
         raise Exception('There is no scenario {}. Please insert a valid scenario number.'.format(scenario_number))
 
 
 # Get simulation data
-simulationData = simulation_scenario(2)
+simulationData = simulation_scenario(3)
 
 # Projection Parameters
 ground_height = 1
@@ -164,8 +207,8 @@ V = 1
 # Tracking parameters
 deltaTime = 0.1
 distance_maximum = 5
-observation_loss_maximum = 10
-observation_new_minimum = 10
+observation_loss_maximum = 5
+observation_new_minimum = 5
 
 # Handover Loop
 output_objects = list()
@@ -188,13 +231,37 @@ for iTime in range(simulationData['Nr Frames']):
     handover_simulation_data.append(frame_data)
 
 
+# Evaluation Metrics
+
+
+# Plotting
+def plot_camera_groundview(cameras, ground_height, ax):
+
+    for camera in cameras:
+        imagePoints = list()
+        imagePoints.append(ImagePoint(0, camera.id, 0, np.array([[0], [0]])))
+        imagePoints.append(ImagePoint(0, camera.id, 0, np.array([[camera.resolution[0]], [0]])))
+        imagePoints.append(ImagePoint(0, camera.id, 0, np.array([[camera.resolution[0]], [camera.resolution[1]]])))
+        imagePoints.append(ImagePoint(0, camera.id, 0, np.array([[0], [camera.resolution[1]]])))
+
+        groundProjections = ground_projections(imagePoints, [camera], ground_height, 1)
+        groundPointsX = [gp.position[0] for gp in groundProjections]
+        groundPointsY = [gp.position[1] for gp in groundProjections]
+        groundPointsX.append(groundPointsX[0])
+        groundPointsY.append(groundPointsY[0])
+
+        ax.plot(groundPointsX, groundPointsY, 'k', linewidth=1)
+
+
 fig, axs = plt.subplots(1, 1)
 objectTrajectories = dict()
 scenePointTrajectories = list()
+plot_camera_groundview(simulationData['Cameras'], ground_height, axs)
+
 for scenePoint in simulationData['Frame Data'][0]['Scene Points']:
     scenePointTrajectories.append({'x': [], 'y': []})
 
-for i in range(0, len(handover_simulation_data), 30):
+for i in range(0, len(handover_simulation_data), 5):
 
     for object in handover_simulation_data[i]['Valid Output Objects']:
         if object.id in objectTrajectories.keys():
@@ -210,10 +277,10 @@ for i in range(0, len(handover_simulation_data), 30):
         scenePointTrajectories[iScenePoint]['y'].append(scenePoint.position[1])
 
 for scenePointTraj in scenePointTrajectories:
-    axs.plot(scenePointTraj['x'], scenePointTraj['y'], 'ks-')
+    axs.plot(scenePointTraj['x'], scenePointTraj['y'], 'k', alpha=0.15)
 
 for objectId in objectTrajectories:
-    axs.plot(objectTrajectories[objectId]['x'], objectTrajectories[objectId]['y'], '*-')
+    axs.plot(objectTrajectories[objectId]['x'], objectTrajectories[objectId]['y'], '.-')
 
 axs.axis('equal')
 plt.show()
@@ -223,7 +290,7 @@ plt.show()
 plot_3D_space = True
 plot_camera_views = False
 plot_projective_space = True
-export_video = True
+export_video = False
 
 
 # Animation: 3D window
@@ -252,28 +319,27 @@ if plot_3D_space:
         ani1.save('Simulation_3D_Space.mp4', writer=writervideo)
 
 
-# Animation: Camera views
+# Animation: Camera views (Under construction)
 if plot_camera_views:
     # Define animation updater
     def animate_image_points(iteration, simulationData, scatters):
         for iCam in range(len(scatters)):
-            imagePoints = [imagePoint for imagePoint in simulationData['Frame Data'][iteration]['Image Points'] if imagePoint.camera_id == iCam]
-            for iPoint, imagePoint in enumerate(imagePoints):
-                scatters[iCam][iPoint]._offsets = [[imagePoint.position[0].item(), imagePoint.position[1].item()]]
+            imagePoints = [ip for ip in simulationData['Frame Data'][iteration]['Image Points'] if ip.camera_id == iCam]
+            if len(imagePoints) > 0:
+                scatters[iCam]._offsets = np.vstack([ip.position for ip in imagePoints])
 
     # Initialize plot. For each camera view, initialize scatter
     fig2, axs = plt.subplots(len(simulationData['Cameras']), 1)
     scatters = list()
     for iCam in range(len(simulationData['Cameras'])):
         # Set axis range
-        axs[iCam].set_xlim((0, 1920))
-        axs[iCam].set_ylim((0, 1080))
-        axs[iCam].invert_yaxis()
-        axs[iCam].title.set_text('Camera {}'.format(simulationData['Cameras'][iCam].id))
+        axs[iCam].set_xlim((0, simulationData['Cameras'][iCam].resolution[0]))
+        axs[iCam].set_ylim((0, simulationData['Cameras'][iCam].resolution[1]))
+        #axs[iCam].invert_yaxis()
+        #axs[iCam].title.set_text('Camera {}'.format(simulationData['Cameras'][iCam].id))
 
         # Initialize Scatters
-        camScatters = [axs[iCam].scatter(imagePoint.position[0], imagePoint.position[1]) for imagePoint in simulationData['Frame Data'][0]['Image Points'] if imagePoint.camera_id == iCam]
-        scatters.append(camScatters)
+        scatters.append(axs[iCam].scatter(500, 500))
 
     # Start animation
     ani2 = animation.FuncAnimation(fig2, animate_image_points, simulationData['Nr Frames'], fargs=(simulationData, scatters), interval=50, blit=False, repeat=True)
@@ -309,6 +375,8 @@ if plot_projective_space:
     ax3[0].set_ylim((-15, 15))
     ax3[1].set_xlim((-2, 2))
     ax3[1].set_ylim((-2, 2))
+
+    plot_camera_groundview(simulationData['Cameras'], ground_height, ax3[0])
 
     # Initialize scatters for scene points, projections, clusters and objects
     scatters = list()

@@ -2,7 +2,7 @@ import numpy as np
 
 
 def pflat(points):
-    return np.divide(points, points[-1,:])
+    return np.divide(points, points[-1, :])
 
 
 class Camera:
