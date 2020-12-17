@@ -1,3 +1,4 @@
 dataset/*
 !dataset/README.md
+.vscode
 __pycache__
