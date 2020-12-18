@@ -155,13 +155,13 @@ def simulation_scenario(scenario_number):
         # Define cameras
         cameras = list()
         cameras.append(Camera(id=len(cameras), R=[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
-                              t=[[0, 0, 4]],
+                              t=[[5, 0, 4]],
                               K=[[400, 0, 960], [0, 400, 540], [0, 0, 1]]))
         cameras.append(Camera(id=len(cameras), R=[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
                               t=[[-5, 0, 4.2]],
                               K=[[400, 0, 960], [0, 400, 540], [0, 0, 1]]))
         cameras.append(Camera(id=len(cameras), R=[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
-                              t=[[0, -4.5, 4]],
+                              t=[[5.5, -6, 4]],
                               K=[[400, 0, 960], [0, 400, 540], [0, 0, 1]]))
         cameras.append(Camera(id=len(cameras), R=[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
                               t=[[-5, -5, 4]],
@@ -170,7 +170,7 @@ def simulation_scenario(scenario_number):
 
         # Define scene points
         scenePoints = list()
-        nrScenePoints = 30
+        nrScenePoints = 20
         for i in range(nrScenePoints):
             height = np.max(np.random.normal(1.8, 0.4), 0) / 2
             center_distance = np.random.normal(15, 2)
@@ -206,7 +206,7 @@ V = 1
 
 # Tracking parameters
 deltaTime = 0.1
-distance_maximum = 5
+distance_maximum = 10
 observation_loss_maximum = 5
 observation_new_minimum = 5
 
@@ -290,7 +290,7 @@ plt.show()
 plot_3D_space = True
 plot_camera_views = False
 plot_projective_space = True
-export_video = True
+export_video = False
 
 
 # Animation: 3D window
