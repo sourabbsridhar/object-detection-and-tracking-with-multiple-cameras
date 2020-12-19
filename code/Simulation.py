@@ -170,7 +170,7 @@ def simulation_scenario(scenario_number):
 
         # Define scene points
         scenePoints = list()
-        nrScenePoints = 20
+        nrScenePoints = 10
         for i in range(nrScenePoints):
             height = np.max(np.random.normal(1.8, 0.4), 0) / 2
             center_distance = np.random.normal(15, 2)
@@ -261,7 +261,7 @@ plot_camera_groundview(simulationData['Cameras'], ground_height, axs)
 for scenePoint in simulationData['Frame Data'][0]['Scene Points']:
     scenePointTrajectories.append({'x': [], 'y': []})
 
-for i in range(0, len(handover_simulation_data), 5):
+for i in range(0, len(handover_simulation_data), 1):
 
     for object in handover_simulation_data[i]['Valid Output Objects']:
         if object.id in objectTrajectories.keys():
