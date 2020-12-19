@@ -122,13 +122,13 @@ def simulation_scenario(scenario_number):
 
         # Define cameras
         cameras = list()
-        cameras.append(Camera(id=len(cameras), R=[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
+        cameras.append(Camera(id=len(cameras), R=[[0, -1, 0], [-1, 0, 0], [0, 0, -1]],
                               t=[[0, 0, 4]],
                               K=[[400, 0, 960], [0, 400, 540], [0, 0, 1]]))
-        cameras.append(Camera(id=len(cameras), R=[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
+        cameras.append(Camera(id=len(cameras), R=[[0, -1, 0], [-1, 0, 0], [0, 0, -1]],
                               t=[[6, 2, 4]],
                               K=[[400, 0, 960], [0, 400, 540], [0, 0, 1]]))
-        cameras.append(Camera(id=len(cameras), R=[[1, 0, 0], [0, -1, 0], [0, 0, -1]],
+        cameras.append(Camera(id=len(cameras), R=[[0, -1, 0], [-1, 0, 0], [0, 0, -1]],
                               t=[[-4, -2, 4]],
                               K=[[400, 0, 960], [0, 400, 540], [0, 0, 1]]))
         cameras.append(Camera(id=len(cameras), R=[[0, -1, 0], [-1, 0, 0], [0, 0, -1]],
@@ -154,17 +154,17 @@ def simulation_scenario(scenario_number):
 
         # Define cameras
         cameras = list()
-        cameras.append(Camera(id=len(cameras), R=[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
-                              t=[[5, 0, 4]],
+        cameras.append(Camera(id=len(cameras), R=[[1, 0, 0], [0, -1, 0], [0, 0, -1]],
+                              t=[[6, 3, 4]],
                               K=[[400, 0, 960], [0, 400, 540], [0, 0, 1]]))
-        cameras.append(Camera(id=len(cameras), R=[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
-                              t=[[-5, 0, 4.2]],
+        cameras.append(Camera(id=len(cameras), R=[[1, 0, 0], [0, -1, 0], [0, 0, -1]],
+                              t=[[-6, 3, 4]],
                               K=[[400, 0, 960], [0, 400, 540], [0, 0, 1]]))
-        cameras.append(Camera(id=len(cameras), R=[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
-                              t=[[5.5, -6, 4]],
+        cameras.append(Camera(id=len(cameras), R=[[1, 0, 0], [0, -1, 0], [0, 0, -1]],
+                              t=[[6, -3, 4]],
                               K=[[400, 0, 960], [0, 400, 540], [0, 0, 1]]))
-        cameras.append(Camera(id=len(cameras), R=[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
-                              t=[[-5, -5, 4]],
+        cameras.append(Camera(id=len(cameras), R=[[1, 0, 0], [0, -1, 0], [0, 0, -1]],
+                              t=[[-6, -3, 4]],
                               K=[[400, 0, 960], [0, 400, 540], [0, 0, 1]]))
         nrCameras = len(cameras)
 
