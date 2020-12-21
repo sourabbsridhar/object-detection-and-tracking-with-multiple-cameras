@@ -9,7 +9,7 @@ def output_object_tracking(output_objects, clusters, output_objectCount, deltaTi
     F = np.array([[1, 0, deltaTime, 0], [0, 1, 0, deltaTime], [0, 0, 1, 0], [0, 0, 0, 1]])  # Process model
     Q = np.diag([0, 0, 1, 1]) * 1  # Process noise covariance
     H = np.identity(4)  # Observation model
-    R = np.diag([1, 1, 1, 1]) * 10  # Observation noise covariance
+    R = np.diag([20, 20, 40, 40])  # Observation noise covariance
 
     # Kalman prediction of output_object states
     predicted_states = list()
@@ -25,7 +25,8 @@ def output_object_tracking(output_objects, clusters, output_objectCount, deltaTi
             objState = object.get_state()
             clusterState = cluster.get_state()
             error = (objState - clusterState)
-            distance = (error.T).dot(predicted_state_cov[iObject]).dot(error)
+            #distance = (error.T).dot(np.linalg.inv(predicted_state_cov[iObject])).dot(error)
+            distance = (error.T).dot(np.linalg.inv(R)).dot(error)
             distances[iCluster, iObject] = distance
 
     # Match clusters to objects if Mahalanobis distance is mutual minimum and under a maximum distance
