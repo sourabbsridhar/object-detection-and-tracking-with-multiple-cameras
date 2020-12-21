@@ -48,8 +48,8 @@ class OpticalFlow:
     def __call__(self, frame, id_b, BBOX, class_name): 
         
         ### REMOVE LATER ####
-        PATH_DICT = 'outputs/dict_test.txt'
-        PATH_OUT = 'outputs/optical_test.txt'
+        PATH_DICT = './outputs/dict_test.txt'
+        PATH_OUT = './outputs/optical_test.txt'
 
         # Fill dictonary
         if str(id_b) not in self.opt_dict: # If no stored info about current ID, add info.

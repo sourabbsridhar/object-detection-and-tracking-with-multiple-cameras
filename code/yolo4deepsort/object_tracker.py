@@ -27,7 +27,9 @@ from tools import generate_detections as gdet
 flags.DEFINE_string('framework', 'tf', '(tf, tflite, trt')
 flags.DEFINE_string('weights', './checkpoints/yolov4-volvo',
                     'path to weights file')
-flags.DEFINE_integer('size', 640, 'resize images to') 
+flags.DEFINE_integer('size', 640, 'resize images to')
+flags.DEFINE_integer('input_size_w', 640, 'define width input size of export model')
+flags.DEFINE_integer('input_size_h', 640, 'define height input size of export model')
 flags.DEFINE_boolean('tiny', False, 'yolo or yolo-tiny')
 flags.DEFINE_string('model', 'yolov4', 'yolov3 or yolov4')
 flags.DEFINE_string('video', './data/video/test.mp4', 'path to input video or set to 0 for webcam')
@@ -35,7 +37,7 @@ flags.DEFINE_string('output', None, 'path to output video')
 flags.DEFINE_string('output_format', 'XVID', 'codec used in VideoWriter when saving video to file')
 flags.DEFINE_float('iou', 0.45, 'iou threshold')
 flags.DEFINE_float('score', 0.50, 'score threshold')
-flags.DEFINE_boolean('dont_show', True, 'dont show video output')
+flags.DEFINE_boolean('dont_show', False, 'dont show video output')
 flags.DEFINE_boolean('info', True, 'show detailed info of tracked objects')
 flags.DEFINE_boolean('count', False, 'count objects being tracked on screen')
 
@@ -46,7 +48,7 @@ def main(_argv):
     nms_max_overlap = 1.0
     
     # initialize deep sort
-    model_filename = 'model_data/mars-small128.pb'
+    model_filename = 'model_data/mars.pb'
     encoder = gdet.create_box_encoder(model_filename, batch_size=1)
     # calculate cosine distance metric
     metric = nn_matching.NearestNeighborDistanceMetric("cosine", max_cosine_distance, nn_budget)
@@ -62,7 +64,8 @@ def main(_argv):
     config.gpu_options.allow_growth = True
     session = InteractiveSession(config=config)
     STRIDES, ANCHORS, NUM_CLASS, XYSCALE = utils.load_config(FLAGS)
-    input_size = FLAGS.size
+    input_size_w = FLAGS.input_size_w
+    input_size_h = FLAGS.input_size_h
     video_path = FLAGS.video
 
     # load tflite model if flag is set
@@ -108,7 +111,7 @@ def main(_argv):
         frame_num +=1
         print('Frame #: ', frame_num)
         frame_size = frame.shape[:2]
-        image_data = cv2.resize(frame, (input_size, input_size))
+        image_data = cv2.resize(frame, (input_size_w, input_size_h))
         image_data = image_data / 255.
         image_data = image_data[np.newaxis, ...].astype(np.float32)
         start_time = time.time()
@@ -121,10 +124,10 @@ def main(_argv):
             # run detections using yolov3 if flag is set
             if FLAGS.model == 'yolov3' and FLAGS.tiny == True:
                 boxes, pred_conf = filter_boxes(pred[1], pred[0], score_threshold=0.25,
-                                                input_shape=tf.constant([input_size, input_size]))
+                                                input_shape=tf.constant([input_size_w, input_size_h]))
             else:
                 boxes, pred_conf = filter_boxes(pred[0], pred[1], score_threshold=0.25,
-                                                input_shape=tf.constant([input_size, input_size]))
+                                                input_shape=tf.constant([input_size_w, input_size_h]))
         else:
             batch_data = tf.constant(image_data)
             pred_bbox = infer(batch_data)
@@ -222,7 +225,7 @@ def main(_argv):
         # if enable info flag then print details about each track
             if FLAGS.info:
                 print("Tracker ID: {}, Class: {},  BBox Coords (xmin, ymin, xmax, ymax): {}".format(str(track.track_id), class_name, (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))))
-                results.append([frame_num, track.track_id, int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]), 1, -1, -1, -1])
+            results.append([frame_num, track.track_id, int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]), 1, -1, -1, -1])
 
             # Call the optical flow 
             bbox = track.to_tlwh() # In order for optical flow calculations to be correct
@@ -247,7 +250,7 @@ def main(_argv):
     cv2.destroyAllWindows()
 
     with open('object_tracking_result.txt', 'w') as f:
-        for line in results:
+        for row in results:
             print('%d,%d,%.2f,%.2f,%.2f,%.2f,1,-1,-1,-1' % (
             row[0], row[1], row[2], row[3], row[4], row[5]),file=f)
 
