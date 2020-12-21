@@ -226,7 +226,7 @@ output_objectCount = 0  # For setting IDs of new objects to the next unique numb
 for iTime in range(simulationData['Nr Frames']):
     # Perform Handover
     imagePoints = simulationData['Frame Data'][iTime]['Image Points']
-    projections = ground_projections(imagePoints, simulationData['Cameras'], ground_height, maximum_speed, deltaTime)
+    projections = ground_projections(imagePoints, simulationData['Cameras'], ground_height, deltaTime)
     clusters = fusion(projections, R, V)
     (output_objects, output_objectCount) = output_object_tracking(output_objects, clusters, output_objectCount, deltaTime, distance_maximum, observation_loss_maximum, observation_new_minimum)
     validated_output_objects = [obj for obj in output_objects if obj.isValid]
@@ -253,7 +253,7 @@ def plot_camera_groundview(cameras, ground_height, ax):
         imagePoints.append(ImagePoint(0, camera.id, 0, np.array([[camera.resolution[0]], [camera.resolution[1]]])))
         imagePoints.append(ImagePoint(0, camera.id, 0, np.array([[0], [camera.resolution[1]]])))
 
-        groundProjections = ground_projections(imagePoints, [camera], ground_height, 42, 1)
+        groundProjections = ground_projections(imagePoints, [camera], ground_height, 1)
         groundPointsX = [gp.position[0] for gp in groundProjections]
         groundPointsY = [gp.position[1] for gp in groundProjections]
         groundPointsX.append(groundPointsX[0])

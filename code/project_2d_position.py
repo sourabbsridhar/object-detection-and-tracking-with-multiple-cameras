@@ -7,7 +7,7 @@ import numpy as np
 #from . import Simulation
 from Handover_Library import Projection, pflat
 
-def ground_projections(imagePoints, cameras, groundHeight, maximum_speed, deltaTime):
+def ground_projections(imagePoints, cameras, groundHeight, deltaTime):
 
     projections = list()
     for imagePoint in imagePoints:
@@ -36,10 +36,6 @@ def ground_projections(imagePoints, cameras, groundHeight, maximum_speed, deltaT
             prev_p_bar = P_bar_global[0:2]
 
             v_bar = (p_bar - prev_p_bar) / deltaTime
-
-            # Limit speed to maximum speed
-            if np.linalg.norm(v_bar) > maximum_speed:
-                v_bar = maximum_speed * v_bar / np.linalg.norm(v_bar)
 
         projection = Projection(imagePoint.detection_id, imagePoint.camera_id, imagePoint.detection_class, p_bar, v_bar)
         projections.append(projection)
