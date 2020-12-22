@@ -3,7 +3,7 @@
 import argparse
 from pathlib import Path
 
-import code.object_detection as objDet
+"""import code.object_detection as objDet
 import code.pose_estimation as poseEst
 import code.project_2d_position as proj2dPos
 import code.fuse_3d_position as fusePos
@@ -89,4 +89,4 @@ if __name__ == "__main__":
     if ((areArgumentsValid == True) and (isSoftwareValid == True)):
         excecuteSoftware(inputPath, detectionWeightsPath, trackingWeightsPath, cameraParametersPath, outputPath, verbose)
     else:
-        print("[ERROR] Aborting Software Execution!")
+        print("[ERROR] Aborting Software Execution!")"""
