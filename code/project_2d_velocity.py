@@ -1,1 +1,0 @@
-# Implementation of Projection Function to project 2D Image velocity onto a 3D plane (To be provided by the handover subgroup)
