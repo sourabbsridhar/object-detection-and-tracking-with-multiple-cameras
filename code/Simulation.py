@@ -216,8 +216,8 @@ V = 6
 # Tracking parameters
 deltaTime = 0.1
 distance_maximum = 2
-observation_new_minimum = 5
-observation_loss_maximum = 10
+observation_new_minimum = 3
+observation_loss_maximum = 3
 
 # Handover Loop
 output_objects = list()
