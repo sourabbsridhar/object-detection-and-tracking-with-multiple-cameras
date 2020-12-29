@@ -155,7 +155,9 @@ def simulation_scenario(scenario_number):
         nrFrames = 300
         deltaTime = 0.1
         imagePoint_noise_STD = 5
-        nrScenePoints = 6
+        nrScenePoints = 7
+
+
 
         # Define cameras
         cameras = list()
