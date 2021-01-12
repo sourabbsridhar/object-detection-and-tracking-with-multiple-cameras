@@ -1,2 +1,19 @@
-dataset/*
-!dataset/README.md
+# Ignore all compilation outputs
+.vscode
+__pycache__
+
+# Ignore all script outputs
+outputs/*
+!outputs/README.md
+
+# Ignore all checkpoints
+checkpoints/*
+!checkpoints/README.md
+
+# Ignore all video formats
+*.mp4
+*.mkv
+*.webm
+
+# Ignore Neural Network weights
+*.weights
