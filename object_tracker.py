@@ -168,7 +168,7 @@ def main(_argv):
         #allowed_classes = list(class_names.values())
         
         # custom allowed classes (uncomment line below to customize tracker for only people)
-        allowed_classes = ['person']
+        allowed_classes = ['person', 'cargo']
 
         # loop through objects and use class index to get class name, allow only classes in allowed_classes list
         names = []
@@ -225,7 +225,7 @@ def main(_argv):
         # if enable info flag then print details about each track
             if FLAGS.info:
                 print("Tracker ID: {}, Class: {},  BBox Coords (xmin, ymin, xmax, ymax): {}".format(str(track.track_id), class_name, (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))))
-            results.append([frame_num, track.track_id, int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]), 1, -1, -1, -1])
+            results.append([frame_num, track.track_id, int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]), str(class_name), -1, -1, -1])
 
             # Call the optical flow 
             bbox = track.to_tlwh() # In order for optical flow calculations to be correct
@@ -249,7 +249,7 @@ def main(_argv):
         if cv2.waitKey(1) & 0xFF == ord('q'): break
     cv2.destroyAllWindows()
 
-    with open('object_tracking_result.txt', 'w') as f:
+    with open('object_tracking_video1.txt', 'w') as f:
         for row in results:
             print('%d,%d,%.2f,%.2f,%.2f,%.2f,1,-1,-1,-1' % (
             row[0], row[1], row[2], row[3], row[4], row[5]),file=f)
