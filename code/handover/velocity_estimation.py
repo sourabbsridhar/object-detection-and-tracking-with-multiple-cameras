@@ -1,1 +1,0 @@
-# Implementation of Velocity Estimation Function for 2D Image Points (To be provided by the object tracking subgroup)
