@@ -22,7 +22,7 @@ from tensorflow.compat.v1 import InteractiveSession
 from deep_sort import preprocessing, nn_matching
 from deep_sort.detection import Detection
 from deep_sort.tracker import Tracker
-from opticalflow import OpticalFlow
+from tracking.opticalflow import OpticalFlow
 from tools import generate_detections as gdet
 flags.DEFINE_string('framework', 'tf', '(tf, tflite, trt')
 flags.DEFINE_string('weights', './checkpoints/yolov4-volvo',
