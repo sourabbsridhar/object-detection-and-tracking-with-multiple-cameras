@@ -15,6 +15,8 @@ class Tracker:
     ----------
     metric : nn_matching.NearestNeighborDistanceMetric
         A distance metric for measurement-to-track association.
+    max_iou_distance : float
+        Max intersection over union distance to be allowed for a match
     max_age : int
         Maximum number of missed misses before a track is deleted.
     n_init : int
@@ -26,6 +28,8 @@ class Tracker:
     ----------
     metric : nn_matching.NearestNeighborDistanceMetric
         The distance metric used for measurement to track association.
+    max_iou_distance : float
+        Max intersection over union distance to be allowed for a match
     max_age : int
         Maximum number of missed misses before a track is deleted.
     n_init : int
@@ -37,7 +41,7 @@ class Tracker:
 
     """
 
-    def __init__(self, metric, max_iou_distance=0.7, max_age=100, n_init=20):
+    def __init__(self, metric, max_iou_distance=0.8, max_age=1000, n_init=3):
         self.metric = metric
         self.max_iou_distance = max_iou_distance
         self.max_age = max_age
